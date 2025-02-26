@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.3.2
+// @version      2.3.3
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -190,9 +190,10 @@
         },
         hostList = [
             'https://tk.tk.icu/',
+            'https://cf-tk.tk.icu/',
             'https://tk.axetk.cn/',
             'https://tk.wanjuantiku.com/',
-            'https://cf-tk.tk.icu/'
+            'https://scriptcat.cn/'
         ],
         host = '',
         handleImgs = (s) => {
@@ -661,7 +662,7 @@
         },
         hostCheck = () => {
             return new Promise((success, fail) => {
-                function r(i) {
+                async function r(i,success) {
                     if (i >= hostList.length) {
                         let z = confirm('【超星学习通九九助手】\n所有服务器均不可用，请稍后刷新重试或尝试更换网络\n请不要使用翻墙软件\n如果仍无法使用，请点击“取消”按钮自动前往更新脚本\nQQ反馈群：585739825');
                         if (!z) {
@@ -670,14 +671,13 @@
                         fail()
                         return
                     }
-                    brequest({ "url": hostList[i] + 'api/status?ran=' + String(Date.now()) + '&version=' + $version }).then((checkResult) => {
+                    await brequest({ "url": hostList[i] + 'api/status?ran=' + String(Date.now()) + '&version=' + $version ,timeout:3e3}).then((checkResult) => {
                         if (!checkResult) {
                             i++
-                            r(i)
-                            success()
+                            r(i,success)
                         } else if (checkResult.status == 't') {
                             host = hostList[i]
-                            s()
+                            s(success)
                         } else if (checkResult.status == 'f') {
                             alert('【超星学习通九九助手】服务器暂停服务，请耐心等待恢复\n' + checkResult.info);
                             fail()
@@ -689,12 +689,12 @@
                                 return
                             }
                             host = hostList[i]
-                            s()
+                            s(success)
                         }
                     })
                 }
                 let sTryTime = 0
-                function s() {
+                function s(success) {
                     sTryTime += 1
                     if (sTryTime > 4) {
                         alert('【超星学习通九九助手】token注册失败，请刷新页面重试\nQQ反馈群:585739825')
@@ -708,7 +708,7 @@
                         register(tempToken).then((result) => {
                             if (!result || result.code != 1) {
                                 setTimeout(() => {
-                                    s()
+                                    s(success)
                                 }, 500)
                             }
                             token = tempToken
@@ -720,9 +720,8 @@
                         success()
                     }
                 }
-                r(0)
+                r(0,success)
             })
-
         }
     // 监听此页面，判断用户是否需要刷学习次数，如果需要，就点进章节
     if ($l.includes('mycourse/studentcourse?')) {
@@ -1947,7 +1946,6 @@
                 }
             }
             let getPoint = point()
-            let videoTime = 0
             loopPoint:
             while (1) {
                 let g = getPoint.next();
@@ -2030,13 +2028,6 @@
                                     }
                                 } catch (e) { }
                                 let nowBar, barr;
-                                const askFeedback = () => {
-                                    if (GM_getValue('feedback', false)) {
-                                        return
-                                    }
-                                    $layer('您的意见与建议对我们非常重要，感觉不错的话别忘了给个好评哦<br>使用过程中有任何问题可以加反馈群，有专人为您解答疑惑<br><div class="buttons"><a class="button" href="https://cn-greasyfork.org/zh-CN/users/sign_in?return_to=%2Fzh-CN%2Fscripts%2F469522%2Ffeedback%23post-discussion" target="_blank">去好评</a><a target="_blank" class="button" href="https://qm.qq.com/cgi-bin/qm/qr?k=boXDsyFCY6MUMnr65sKaQswLkshxUd7l&jump_from=webapi&authKey=MCQ5g0fbe9Mi/iZwLXAWVeATCGjZCiJL+W6HM8OJiPkBqCUdlLmk290LdJ0XwN3W">加入反馈群</a></div>');
-                                    GM_setValue('feedback', true)
-                                }
                                 loopType:
                                 switch (jobData.type) {
                                     case 'video':
@@ -2177,13 +2168,6 @@
                                             let watchResultJson = JSON.parse(watchResult.responseText);
                                             if (watchResultJson.isPassed) {
                                                 logs.addLog('视频任务完成：' + jobData.property.name, 'green');
-                                                try {
-                                                    videoTime++
-                                                    if (videoTime > 3 && GM_getValue('tkLeft', 0) > 100) {
-                                                        videoTime = 0
-                                                        askFeedback()
-                                                    }
-                                                } catch (e) { }
                                                 clearInterval(barr);
                                                 break loopType;
                                             } else if (isdrag == '4') {
