@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.3.3
+// @version      2.3.4
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -1834,7 +1834,7 @@
                 }
                 await sleep(500);
             }
-            const videoV = '2025-0214-1842',
+            const videoV = '2025-0304-1842',
                 classId = $s['clazzid'] || $s['classid'] || $s['classId'] || $s['classId'],
                 courseId = $s['courseid'] || $s['courseId'],
                 cpi = $s['cpi'],
