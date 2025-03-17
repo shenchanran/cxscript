@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.3.4
+// @version      2.3.5
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -287,28 +287,28 @@
         },
         request = (data) => {
             let hosts = window.location.href.match(/https:\/\/webvpn\.(.*?)\/https\/[0-9a-z]+\//)
-            if (Array.isArray(hosts)&&hosts.length>0) {
+            if (Array.isArray(hosts) && hosts.length > 0) {
                 try {
-                    if(data.headers&&data.headers.Referer){//修改referer为vpn
-                        try{
+                    if (data.headers && data.headers.Referer) {//修改referer为vpn
+                        try {
                             const refererObj = new URL(data.headers.Referer)
                             data.headers.Referer = hosts[0].slice(0, -1) + refererObj.pathname + refererObj.search + refererObj.hash
-                        }catch(e){
+                        } catch (e) {
                             console.log(e)
                         }
                     }
                     const urlObj = new URL(data.url)
                     data.url = hosts[0].slice(0, -1) + urlObj.pathname + urlObj.search + urlObj.hash
                 } catch (e) {//data.url是个路径，不是完整url
-                    if(data.url.charAt(0)=='/'){
-                        data.url = hosts[0].slice(0, -1)+data.url
-                    }else{
-                        data.url = hosts[0]+data.url
+                    if (data.url.charAt(0) == '/') {
+                        data.url = hosts[0].slice(0, -1) + data.url
+                    } else {
+                        data.url = hosts[0] + data.url
                     }
                     console.log(e)
                 }
-                if(!data.url.includes('&enlink-vpn')){
-                    data.url+='&enlink-vpn'
+                if (!data.url.includes('&enlink-vpn')) {
+                    data.url += '&enlink-vpn'
                 }
             }//如果检测到校园网，自动重建请求到校园网节点
             return new Promise((success, fail) => {
@@ -639,9 +639,9 @@
         getTkToken = () => {
             //尝试从脚本存储中获取token，如果无法获取，就从页面缓存中获取，并且同步
             let token = GM_getValue('shenchanranToken', false) || $w.localStorage.getItem("shenchanranToken")
-            if(token){
+            if (token) {
                 GM_setValue('shenchanranToken', token)
-                $w.localStorage.setItem("shenchanranToken",token)
+                $w.localStorage.setItem("shenchanranToken", token)
             }
             return token
         },
@@ -662,7 +662,7 @@
         },
         hostCheck = () => {
             return new Promise((success, fail) => {
-                async function r(i,success) {
+                async function r(i, success) {
                     if (i >= hostList.length) {
                         let z = confirm('【超星学习通九九助手】\n所有服务器均不可用，请稍后刷新重试或尝试更换网络\n请不要使用翻墙软件\n如果仍无法使用，请点击“取消”按钮自动前往更新脚本\nQQ反馈群：585739825');
                         if (!z) {
@@ -671,10 +671,10 @@
                         fail()
                         return
                     }
-                    await brequest({ "url": hostList[i] + 'api/status?ran=' + String(Date.now()) + '&version=' + $version ,timeout:3e3}).then((checkResult) => {
+                    await brequest({ "url": hostList[i] + 'api/status?ran=' + String(Date.now()) + '&version=' + $version, timeout: 3e3 }).then((checkResult) => {
                         if (!checkResult) {
                             i++
-                            r(i,success)
+                            r(i, success)
                         } else if (checkResult.status == 't') {
                             host = hostList[i]
                             s(success)
@@ -720,7 +720,7 @@
                         success()
                     }
                 }
-                r(0,success)
+                r(0, success)
             })
         }
     // 监听此页面，判断用户是否需要刷学习次数，如果需要，就点进章节
@@ -740,15 +740,15 @@
         }, 500)
     }
     else if ($l.includes('return_url.php?pid=1000')) {//防止有用户充值到其他token上
-        let scriptToken = GM_getValue('shenchanranToken','none'),
-            reg= /^[0-9a-z]{32}$/
-        if(reg.test(scriptToken)&&GM_getValue('tkLeft',0)==0){//确定脚本已经生成了token,并且答题次数为0
-            for(host of hostList){
-                if(host.includes($w.location.host)){
+        let scriptToken = GM_getValue('shenchanranToken', 'none'),
+            reg = /^[0-9a-z]{32}$/
+        if (reg.test(scriptToken) && GM_getValue('tkLeft', 0) == 0) {//确定脚本已经生成了token,并且答题次数为0
+            for (host of hostList) {
+                if (host.includes($w.location.host)) {
                     let ctoken = getCookie('token')
-                    if(reg.test(ctoken)&&ctoken!=scriptToken){
-                        if(confirm('【超星学习通九九助手】\n\n您当前充值的token不是脚本正在使用的Token\n是否自动切换为您充值的token？')){
-                            GM_setValue('shenchanranToken',ctoken)
+                    if (reg.test(ctoken) && ctoken != scriptToken) {
+                        if (confirm('【超星学习通九九助手】\n\n您当前充值的token不是脚本正在使用的Token\n是否自动切换为您充值的token？')) {
+                            GM_setValue('shenchanranToken', ctoken)
                         }
                     }
                 }
@@ -872,12 +872,12 @@
             }
             newVersion = false
         } else {
-            setTimeout(()=>{
+            setTimeout(() => {
                 let hosts = window.location.href.match(/https:\/\/webvpn\.(.*?)\/https\/[0-9a-z]+\//)
-                if (Array.isArray(hosts)&&hosts.length>0) {
+                if (Array.isArray(hosts) && hosts.length > 0) {
                     $w.backToOld()
                 }
-            },1000)//如果检测到校园网，自动切换到旧版页面（新版没法用）
+            }, 1000)//如果检测到校园网，自动切换到旧版页面（新版没法用）
             setTimeout(e => {
                 const pagehead = $d.querySelector('.headRight')
                 if (!pagehead.innerHTML.includes('回到旧版')) {
@@ -894,7 +894,7 @@
         const div = $d.createElement('div')
         const entrance = (host) => {
             let hosts = window.location.href.match(/https:\/\/webvpn\.(.*?)\/https\/[0-9a-z]+\//)
-            if (Array.isArray(hosts)&&hosts.length>0) {
+            if (Array.isArray(hosts) && hosts.length > 0) {
                 host = hosts[0].slice(0, -1)
             }//如果检测到校园网，自动替换host为校园网节点
             let classId = $s['clazzid'] || $s['classid'] || $s['classId'] || $s['classId'],
@@ -904,12 +904,12 @@
             $w.location.href = host + `/mooc-ans/course/999999999${$version}.html?ut=s&classid=` + classId + '&courseid=' + courseId + '&cpi=' + cpi + '&coursename=' + courseName + '&uid=' + $uid
         }
         div.setAttribute("id", "skpannel")
-        if (/Android/i.test(navigator.userAgent)&&!/Edg/i.test(navigator.userAgent)) {
+        if (/Android/i.test(navigator.userAgent) && !/Edg/i.test(navigator.userAgent)) {
             let a = confirm('【超星学习通九九助手】\n\n您可能正在使用手机浏览器\n我们不保证脚本能正常运行\n也不保证学习成绩\n建议使用edge手机端浏览器\n点击确定查看详细教程、点击取消关闭此窗口')
-            if(a){
+            if (a) {
                 $w.location.href = 'https://greasyfork.cn/post/3'
             }
-        }else if(/EdgA/i.test(navigator.userAgent)){
+        } else if (/EdgA/i.test(navigator.userAgent)) {
             alert('【超星学习通九九助手】\n\n您可能正在使用edge手机浏览器\n我们不保证脚本能在后台正常挂机\n不同手机的后台策略不同，可能在您回到桌面后会自动暂停\n如遇问题请刷新页面或更换为电脑浏览器')
         }
         div.innerHTML = `<div id="skshadow" style="
@@ -1121,210 +1121,210 @@
                 }
             })
         },
-        anhwudinai = function(courseid, classid, cpi){
-            this.referer = false
-            this.conversation = {
-                sending: false,
-                error: false,
-                list: []
-            }
-            this.readys = false
-            this.cozeEnc = false
-            this.botId = false
-            this.userId = false
-            this.appId = false
-            this.conversationId = false
-            this.ready = function (timeout = 3000) {
-                if (this.readys) {
-                    return true
+            anhwudinai = function (courseid, classid, cpi) {
+                this.referer = false
+                this.conversation = {
+                    sending: false,
+                    error: false,
+                    list: []
                 }
-                const url = 'https://mooc1.chaoxing.com/course-ans/ai/getStuAiWorkBench?courseId=' + courseid + '&clazzId=' + classid + '&cpi=' + cpi + '&ut=s&'
-                return new Promise((a, _) => {
-                    GM_xmlhttpRequest({
-                        url,
-                        method: 'get',
-                        timeout,
-                        onload: (res) => {
-                            if (res.status != 200) {
-                                a(false)
-                            } else {
-                                const d = unsafeWindow.document.createElement('div')
-                                d.innerHTML = res.responseText
-                                const iframe = d.querySelector('.menuTab')
-                                this.referer = iframe.getAttribute('hrefStr')
-                                GM_xmlhttpRequest({
-                                    url: this.referer,
-                                    method: 'get',
-                                    timeout,
-                                    onload: (res) => {
-                                        if (res.status != 200) {
+                this.readys = false
+                this.cozeEnc = false
+                this.botId = false
+                this.userId = false
+                this.appId = false
+                this.conversationId = false
+                this.ready = function (timeout = 3000) {
+                    if (this.readys) {
+                        return true
+                    }
+                    const url = 'https://mooc1.chaoxing.com/course-ans/ai/getStuAiWorkBench?courseId=' + courseid + '&clazzId=' + classid + '&cpi=' + cpi + '&ut=s&'
+                    return new Promise((a, _) => {
+                        GM_xmlhttpRequest({
+                            url,
+                            method: 'get',
+                            timeout,
+                            onload: (res) => {
+                                if (res.status != 200) {
+                                    a(false)
+                                } else {
+                                    const d = unsafeWindow.document.createElement('div')
+                                    d.innerHTML = res.responseText
+                                    const iframe = d.querySelector('.menuTab')
+                                    this.referer = iframe.getAttribute('hrefStr')
+                                    GM_xmlhttpRequest({
+                                        url: this.referer,
+                                        method: 'get',
+                                        timeout,
+                                        onload: (res) => {
+                                            if (res.status != 200) {
+                                                a(false)
+                                            } else {
+                                                const d = unsafeWindow.document.createElement('div')
+                                                d.innerHTML = res.responseText
+                                                this.cozeEnc = d.querySelector('#cozeEnc').value
+                                                this.botId = d.querySelector('#botId').value
+                                                this.userId = d.querySelector('#userId').value
+                                                this.appId = d.querySelector('#appId').value
+                                                this.conversationId = d.querySelector('#conversationId').value
+                                                this.readys = true
+                                                a(true)
+                                            }
+                                        },
+                                        onerror: function (e) {
+                                            console.log(e)
                                             a(false)
-                                        } else {
-                                            const d = unsafeWindow.document.createElement('div')
-                                            d.innerHTML = res.responseText
-                                            this.cozeEnc = d.querySelector('#cozeEnc').value
-                                            this.botId = d.querySelector('#botId').value
-                                            this.userId = d.querySelector('#userId').value
-                                            this.appId = d.querySelector('#appId').value
-                                            this.conversationId = d.querySelector('#conversationId').value
-                                            this.readys = true
-                                            a(true)
-                                        }
-                                    },
-                                    onerror: function (e) {
-                                        console.log(e)
-                                        a(false)
-                                    },
-                                    onabort: function (e) {
-                                        console.log(e)
-                                        a(false)
-                                    },
-                                    ontimeout: function (e) {
-                                        console.log(e)
-                                        a(false)
-                                    },
+                                        },
+                                        onabort: function (e) {
+                                            console.log(e)
+                                            a(false)
+                                        },
+                                        ontimeout: function (e) {
+                                            console.log(e)
+                                            a(false)
+                                        },
+                                    })
+                                }
+                            },
+                            onerror: function (e) {
+                                console.log(e)
+                                a(false)
+                            },
+                            onabort: function (e) {
+                                console.log(e)
+                                a(false)
+                            },
+                            ontimeout: function (e) {
+                                console.log(e)
+                                a(false)
+                            }
+                        })
+                    })
+                }
+                this.send = function (type, tm, options = []) {
+                    let t = ['单选题', '多选题', false, '判断题']
+                    let o = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K']
+                    let tt = t[type]
+                    let content = `(${tt})${tm}\n`
+                    if (type != 3) {
+                        let option = ''
+                        for (let i in options) {
+                            if (options[i].includes('/')) {
+                                return false
+                            }
+                            option += `${o[i]}、${options[i]}\n`
+                        }
+                        content += option
+                    }
+                    content += "这道题选什么？"
+                    return new Promise((a, _) => {
+                        if (!this.readys) {
+                            a(false)
+                        }
+                        if (this.conversation.sending) {
+                            this.conversation.error = '上一条消息正在发送，请稍后'
+                            a(false)
+                        }
+                        this.conversation.sending = true
+                        this.conversation.list.push({
+                            "role": "user",
+                            "content": content,
+                            "baseData": {
+                                "conversationId": this.conversationId,
+                                "userId": this.userId,
+                                "appId": this.appId,
+                                "botId": this.botId
+                            }
+                        })
+                        let sentence = ''
+                        let msgId = '0'
+                        GM_xmlhttpRequest({
+                            method: 'POST',
+                            url: `https://stat2-ans.chaoxing.com/bot/talk?cozeEnc=${this.cozeEnc}&botId=${this.botId}&userId=${this.userId}&appId=${this.appId}&courseid=${courseid}&clazzid=${classid}`,
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Referer': this.referer
+                            },
+                            data: JSON.stringify(this.conversation.list),
+                            onload: (response) => {
+                                let word_ = response.responseText.replaceAll('data::server-heartbeat', '')
+                                let words = word_.split("\n\ndata:$_$")
+                                words.forEach(element => {
+                                    if (!element || element == '') {
+                                        return
+                                    }
+                                    element = element.replace(/\n\n$/)
+                                    try {
+                                        JSON.parse(element)
+                                    } catch {
+                                        return
+                                    }
+                                    let word_json = JSON.parse(element)
+                                    let word = word_json.content
+                                    if (typeof word_json.content !== 'undefined') {
+                                        msgId = word_json.id
+                                        sentence += word
+                                    }
                                 })
+                                this.conversation.list.push({
+                                    "id": Date.now(),
+                                    "role": "assistant",
+                                    "content": sentence,
+                                    "done": true,
+                                    "msgs": {},
+                                    "followUps": [],
+                                    "msgId": msgId,
+                                    "convertContent": `<p>${sentence}</p>`
+                                })
+                                this.conversation.sending = false
+                                let answer = false
+                                if (type != 3) {
+                                    answer = this.form(type, options, sentence)
+                                } else {
+                                    let a = sentence.indexOf('正确')
+                                    let b = sentence.indexOf('错误')
+                                    if (a === -1 && b === -1) {
+                                        answer = false
+                                    } else if (a !== -1 && b != -1) {
+                                        answer = a < b ? '正确' : '错误'
+                                    } else {
+                                        answer = a === -1 ? '错误' : '正确'
+                                    }
+                                }
+                                a(answer)
+                            },
+                            onerror: function (error) {
+                                this.conversation.sending = false
+                                console.error('请求失败:', error)
                             }
-                        },
-                        onerror: function (e) {
-                            console.log(e)
-                            a(false)
-                        },
-                        onabort: function (e) {
-                            console.log(e)
-                            a(false)
-                        },
-                        ontimeout: function (e) {
-                            console.log(e)
-                            a(false)
-                        }
+                        });
                     })
-                })
-            }
-            this.send = function (type, tm, options=[]) {
-                let t = ['单选题', '多选题', false, '判断题']
-                let o = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K']
-                let tt = t[type]
-                let content = `(${tt})${tm}\n`
-                if (type != 3) {
-                    let option = ''
-                    for (let i in options) {
-                        if (options[i].includes('/')) {
-                            return false
-                        }
-                        option += `${o[i]}、${options[i]}\n`
-                    }
-                    content += option
                 }
-                content+="这道题选什么？"
-                return new Promise((a, _) => {
-                    if (!this.readys) {
-                        a(false)
-                    }
-                    if (this.conversation.sending) {
-                        this.conversation.error = '上一条消息正在发送，请稍后'
-                        a(false)
-                    }
-                    this.conversation.sending = true
-                    this.conversation.list.push({
-                        "role": "user",
-                        "content": content,
-                        "baseData": {
-                            "conversationId": this.conversationId,
-                            "userId": this.userId,
-                            "appId": this.appId,
-                            "botId": this.botId
+                this.form = function (type, options, str) {
+                    let result = false
+                    for (let i = 0; i < str.length; i++) {
+                        if (str[i] === '\n' || i > 30) {
+                            return result
                         }
-                    })
-                    let sentence = ''
-                    let msgId = '0'
-                    GM_xmlhttpRequest({
-                        method: 'POST',
-                        url: `https://stat2-ans.chaoxing.com/bot/talk?cozeEnc=${this.cozeEnc}&botId=${this.botId}&userId=${this.userId}&appId=${this.appId}&courseid=${courseid}&clazzid=${classid}`,
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Referer': this.referer
-                        },
-                        data: JSON.stringify(this.conversation.list),
-                        onload: (response) => {
-                            let word_ = response.responseText.replaceAll('data::server-heartbeat', '')
-                            let words = word_.split("\n\ndata:$_$")
-                            words.forEach(element => {
-                                if (!element || element == '') {
-                                    return
+                        // 检查是否是大写字母
+                        if (str[i] >= 'A' && str[i] <= 'Z') {
+                            const letterNum = str[i].charCodeAt(0) - 'A'.charCodeAt(0) + 1
+                            if (letterNum > options.length) {
+                                continue
+                            } else if (type == 0) {
+                                return options[letterNum - 1]
+                            } else {
+                                if (!result) {
+                                    result = ''
                                 }
-                                element = element.replace(/\n\n$/)
-                                try {
-                                    JSON.parse(element)
-                                } catch {
-                                    return
-                                }
-                                let word_json = JSON.parse(element)
-                                let word = word_json.content
-                                if (typeof word_json.content !== 'undefined') {
-                                    msgId = word_json.id
-                                    sentence += word
-                                }
-                            })
-                            this.conversation.list.push({
-                                "id": Date.now(),
-                                "role": "assistant",
-                                "content": sentence,
-                                "done": true,
-                                "msgs": {},
-                                "followUps": [],
-                                "msgId": msgId,
-                                "convertContent": `<p>${sentence}</p>`
-                            })
-                            this.conversation.sending = false
-                            let answer = false
-                            if(type!=3){
-                                answer = this.form(type,options,sentence)
-                            }else{
-                                let a = sentence.indexOf('正确')
-                                let b = sentence.indexOf('错误')
-                                if(a===-1&&b===-1){
-                                    answer = false
-                                }else if(a!==-1&&b!=-1){
-                                    answer = a<b?'正确':'错误'
-                                }else{
-                                    answer = a===-1?'错误':'正确'
-                                }
+                                result += options[letterNum - 1] + '#'
                             }
-                            a(answer)
-                        },
-                        onerror: function (error) {
-                            this.conversation.sending = false
-                            console.error('请求失败:', error)
+
                         }
-                    });
-                })
-            }
-            this.form = function (type,options, str) {
-                let result = false
-                for (let i = 0; i < str.length; i++) {
-                    if (str[i] === '\n'||i>30) {
-                        return result
                     }
-                    // 检查是否是大写字母
-                    if (str[i] >= 'A' && str[i] <= 'Z') {
-                        const letterNum = str[i].charCodeAt(0) - 'A'.charCodeAt(0) + 1
-                        if (letterNum > options.length) {
-                            continue
-                        }else if(type==0){
-                            return options[letterNum-1]
-                        }else{
-                            if(!result){
-                                result = ''
-                            }
-                            result+=options[letterNum-1]+'#'
-                        }
-                        
-                    }
+                    return result
                 }
-                return result
             }
-        }
         async function main() {
             $d.querySelector('html').innerHTML = `
             <!DOCTYPE html>
@@ -1714,15 +1714,15 @@
                 GM_setValue('doWork', (() => { return s && ((() => { doWorkButton.setAttribute('class', 'btn btn-primary'); $w.logs.addLog('将会处理章节测试任务', 'green'); return true; })()) || ((() => { doWorkButton.setAttribute('class', 'btn btn-light'); $w.logs.addLog('将不会处理章节测试任务', 'red'); return false; })()) })());
             }
             AIbutton.onclick = function () {
-                if(!$w['AIwarning']){
+                if (!$w['AIwarning']) {
                     $layer('<center><p>AI答题目前为测试功能</p><p>目前只支持章节测试的单选多选和判断题<p><p>不保证AI作答的成绩</p><p>只适用于补充题库没查到的题</p><p>建议关闭自动提交，作答完成后人工检查</p><p>脚本问题反馈群：<b>921846225</b></p></center>');
                     $w['AIwarning'] = true;
                 }
-                if ($w.left>100) {
+                if ($w.left > 100) {
                     let s = AIbutton.getAttribute('class').includes('light');
                     GM_setValue('doAI', (() => { return s && ((() => { AIbutton.setAttribute('class', 'btn btn-primary'); $w.logs.addLog('AI答题已开启', 'green'); return true; })()) || ((() => { AIbutton.setAttribute('class', 'btn btn-light'); $w.logs.addLog('AI答题已关闭', 'red'); return false; })()) })());
-                }else{
-                    GM_setValue('doAI',0)
+                } else {
+                    GM_setValue('doAI', 0)
                     AIbutton.setAttribute('class', 'btn btn-light')
                     $w.logs.addLog('为防止正确率过低，剩余答题次数过低时禁用AI答题', 'red');
                 }
@@ -1834,8 +1834,8 @@
                 }
                 await sleep(500);
             }
-            const videoV = '2025-0304-1842',
-                classId = $s['clazzid'] || $s['classid'] || $s['classId'] || $s['classId'],
+            let videoV = '2025-0314-1842'
+            const classId = $s['clazzid'] || $s['classid'] || $s['classId'] || $s['classId'],
                 courseId = $s['courseid'] || $s['courseId'],
                 cpi = $s['cpi'],
                 logs = $w.logs,
@@ -1849,6 +1849,28 @@
                         bar.innerHTML = now + "%";
                     } catch { }
                 }
+            try {
+                GM_xmlhttpRequest({
+                    method: 'GET',
+                    url: $siteHost + '/ananas/ueditor/ueditor.parse.js?t='+Math.round(new Date() / 1000),
+                    data: 'string',
+                    timeout: 3000,
+                    onload(res) {
+                        if (res.responseText) {
+                            const regex = /modules\/video\/index\.html\?v=(\d{4}-\d{4}-\d{4})/m
+                            const match = res.responseText.match(regex)
+                            if (match) {
+                                videoV = match[1]
+                                console.log(videoV)
+                            } else {
+                                console.log(res.responseText)
+                            }
+                        }
+                    }
+                })
+            } catch (e) {
+                console.log(e)
+            }
             let $fid = getCookie('fid') || false
             if (!classId || !courseId) {
                 alert('参数不全，请重新进入此页面');
@@ -2062,7 +2084,7 @@
                                             logs.addLog('视频还没有准备好，跳过此任务：' + jobData.property.name, 'red');
                                             break loopType;
                                         }
-                                        if(!videoInfo.duration){//老师上传的视频长度小于1秒，就会出现此问题
+                                        if (!videoInfo.duration) {//老师上传的视频长度小于1秒，就会出现此问题
                                             logs.addLog('异常视频，无法完成：' + jobData.property.name, 'red');
                                             break loopType;
                                         }
@@ -2303,10 +2325,10 @@
                                             return originalSetAttribute.call(this, name, value);
                                         }
                                         let iframe = $d.createElement('iframe');
-                                        iframe.setAttribute('translate','no')
-                                        iframe.setAttribute('frameborder','0')
-                                        iframe.setAttribute('scrolling','auto')
-                                        iframe.setAttribute('style','width: 100%;height: auto;')
+                                        iframe.setAttribute('translate', 'no')
+                                        iframe.setAttribute('frameborder', '0')
+                                        iframe.setAttribute('scrolling', 'auto')
+                                        iframe.setAttribute('style', 'width: 100%;height: auto;')
                                         let srcdoc = workPageResult.responseText.replaceAll(/alert\(/ig, 'console.log(').replaceAll(/confirm\((.*?)\)/ig, 'true').replaceAll('ua = "pc"', 'ua = "app"').replaceAll(/<br>/ig, '').replaceAll(/<\/br>/ig, '')
                                         iframe.setAttribute('srcdoc', srcdoc)
                                         let iframe_content = $d.querySelector('#iframe_content')
@@ -2439,12 +2461,12 @@
                                         logs.addLog('开始做章节测试：' + jobData.property.title);
                                         let enadblAI = false
                                         let AI = false
-                                        if(GM_getValue('doAI',false)&&anhwudinai){
-                                            try{
-                                                AI = new anhwudinai(courseId,classId,cpi)
+                                        if (GM_getValue('doAI', false) && anhwudinai) {
+                                            try {
+                                                AI = new anhwudinai(courseId, classId, cpi)
                                                 AI.ready()
                                                 enadblAI = true
-                                            }catch(e){
+                                            } catch (e) {
                                                 console.log(e)
                                             }
                                         }
@@ -2505,19 +2527,19 @@
                                                     if (tkResultJson.code != 1) {
                                                         if (tkResultJson.msg) {
                                                             logs.addLog('题库错误：' + tkResultJson.msg, 'red');
-                                                            if($w.left>100&&GM_getValue('doAI',false)&&enadblAI&&AI.readys){
-                                                                try{
-                                                                    tkReady = await AI.send(types,tm,optionsList)
-                                                                    if(!tkReady){
+                                                            if ($w.left > 100 && GM_getValue('doAI', false) && enadblAI && AI.readys) {
+                                                                try {
+                                                                    tkReady = await AI.send(types, tm, optionsList)
+                                                                    if (!tkReady) {
                                                                         logs.addLog('AI也没找到', 'red');
                                                                         continue;
                                                                     }
-                                                                }catch(e){
+                                                                } catch (e) {
                                                                     console.log(e)
                                                                     logs.addLog('AI答题出现未知错误', 'red');
                                                                     continue
                                                                 }
-                                                            }else{
+                                                            } else {
                                                                 continue
                                                             }
                                                         }
@@ -2926,7 +2948,7 @@
                                     },
                                     data: data,
                                     onload: success,
-                                    onerror:success,
+                                    onerror: success,
                                     onabort: success,
                                     ontimeout: success
                                 })
