@@ -345,7 +345,7 @@
                                 }
                             }
                             xhr.onerror = function () {
-                                alert('登录状态失效，请重新登陆超星\n反馈群：921846225');
+                                alert('登录状态失效，请重新登陆超星\n反馈群：585739825');
                                 $w.location.href = $protocol + $w.location.host.replace(/mooc(.*?)\./ig, 'passport2.') + '/login?fid=&newversion=true&refer=' + encodeURIComponent($l)
                             }
                             xhr.timeout = data.timeout
@@ -360,7 +360,7 @@
                                 xhr.send()
                             }
                         } else if (GM_info.scriptHandler == "Tampermonkey" && ['5.2.6195', '5.2.6196', '5.2.6197', '5.2.6198', '5.2.6199', '5.2.6200', '5.2.0'].includes(GM_info.version)) {
-                            if (confirm(`您正在使用的油猴插件版本为测试版：${GM_info.version}\n该版本存在未修复的问题，无法稳定的运行此脚本，请使用脚本猫\n点击确定前往脚本猫官网\n反馈群：921846225`)) {
+                            if (confirm(`您正在使用的油猴插件版本为测试版：${GM_info.version}\n该版本存在未修复的问题，无法稳定的运行此脚本，请使用脚本猫\n点击确定前往脚本猫官网\n反馈群：585739825`)) {
                                 $w.location.href = 'https://scriptcat.org/zh-CN/'
                             } else {
                                 success(false)
@@ -682,7 +682,7 @@
                             alert('【超星学习通九九助手】服务器暂停服务，请耐心等待恢复\n' + checkResult.info);
                             fail()
                         } else if (checkResult.status == 'u') {
-                            let l = confirm('【超星学习通九九助手】当前脚本有新版本，点击确定前往更新\n交流群：921846225');
+                            let l = confirm('【超星学习通九九助手】当前脚本有新版本，点击确定前往更新\n交流群：585739825');
                             if (l) {
                                 $w.top.location.href = checkResult.url
                                 fail()
@@ -1677,7 +1677,7 @@
             if (/^((?!chrome|android).)*safari/i.test($w.navigator.userAgent)) {
                 $layer("<center>此脚本不支持Safari浏览器<br>请mac/ipad用户<a href='https://www.microsoft.com/zh-cn/edge/download'>安装Microsoft Edge浏览器</a></center>")
             }
-            $layer('<center><p>牢记脚本官网：<span style="color:blue;"><a href="http://f12.cx" target="_blank">f12.cx</a></span> 直接在浏览器访问</p><p>倍速刷视频会导致学习进度被清空</p><p>同账号多开脚本学习会导致学习进度被清空<p><p><a href="http://f12.cx/p-01.html" target="_blank">什么是清空？为什么会清空？</a></p><p><a href="https://greasyfork.cn/post/3" target="_blank">现已支持安卓端运行！</a></p><p><a href="https://greasyfork.cn/post/4" target="_blank">如何多开浏览器</a></p><p>脚本问题反馈群：<b>921846225</b></p></center>');
+            $layer('<center><p>牢记脚本官网：<span style="color:blue;"><a href="http://f12.cx" target="_blank">f12.cx</a></span> 直接在浏览器访问</p><p>倍速刷视频会导致学习进度被清空</p><p>同账号多开脚本学习会导致学习进度被清空<p><p><a href="http://f12.cx/p-01.html" target="_blank">什么是清空？为什么会清空？</a></p><p><a href="https://greasyfork.cn/post/3" target="_blank">现已支持安卓端运行！</a></p><p><a href="https://greasyfork.cn/post/4" target="_blank">如何多开浏览器</a></p><p>脚本问题反馈群：<b>585739825</b></p></center>');
             const doVideoButton = $d.querySelector('#doVideo'),
                 doDocumentButton = $d.querySelector('#doDocument'),
                 doWorkButton = $d.querySelector('#doWork'),
@@ -1715,7 +1715,7 @@
             }
             AIbutton.onclick = function () {
                 if (!$w['AIwarning']) {
-                    $layer('<center><p>AI答题目前为测试功能</p><p>目前只支持章节测试的单选多选和判断题<p><p>不保证AI作答的成绩</p><p>只适用于补充题库没查到的题</p><p>建议关闭自动提交，作答完成后人工检查</p><p>脚本问题反馈群：<b>921846225</b></p></center>');
+                    $layer('<center><p>AI答题目前为测试功能</p><p>目前只支持章节测试的单选多选和判断题<p><p>不保证AI作答的成绩</p><p>只适用于补充题库没查到的题</p><p>建议关闭自动提交，作答完成后人工检查</p><p>脚本问题反馈群：<b>585739825</b></p></center>');
                     $w['AIwarning'] = true;
                 }
                 if ($w.left > 100) {
