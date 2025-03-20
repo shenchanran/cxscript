@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.3.5
+// @version      2.3.6
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -41,6 +41,7 @@
 // @connect      mooc1.hnsyu.net
 // @connect      passport2.xust.edu.cn
 // @connect      stat2-ans.hnsyu.net
+// @connect      scriptcat.cn
 // @connect      passport2.hnsyu.net
 // @connect      mooc1.gdhkmooc.com
 // @connect      stat2-ans.gdhkmooc.com
@@ -660,51 +661,198 @@
                 }
             })
         },
-        hostCheck = () => {
-            return new Promise((success, fail) => {
-                async function r(i, success) {
-                    if (i >= hostList.length) {
-                        let z = confirm('【超星学习通九九助手】\n所有服务器均不可用，请稍后刷新重试或尝试更换网络\n请不要使用翻墙软件\n如果仍无法使用，请点击“取消”按钮自动前往更新脚本\nQQ反馈群：585739825');
-                        if (!z) {
-                            $w.top.location.href = 'http://f12.cx'
-                        }
-                        fail()
+        tokenGetter = () => {
+            return new Promise((s, f) => {
+                GM_setValue('waitForLogin',false)
+                const style = document.createElement('style')
+                style.textContent = `
+                    .modal-overlay {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background-color: rgba(0, 0, 0, 0.5);
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        z-index: 1000;
+                    }
+                    .modal-content {
+                        font-size:16px;
+                        background-color: white;
+                        padding: 20px;
+                        border-radius: 8px;
+                        text-align: center;
+                        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                        max-width: 300px;
+                        width: 100%;
+                    }
+                    .modal-content .modal-title {
+                        font-size:30px;
+                    }
+                    .modal-buttons {
+                        margin-top: 20px;
+                    }
+                    .modal-buttons button {
+                        margin-top: 10px;
+                        padding: 10px 20px;
+                        border: none;
+                        border-radius: 4px;
+                        cursor: pointer;
+                    }
+                    .modal-buttons button {
+                        background-color: #4CAF50;
+                        color: white;
+                    }
+                        .modal-buttons button:last-child {
+                        background-color:rgb(175, 76, 76);
+                        color: white;
+                    }`;
+                $d.head.appendChild(style)
+                // 创建弹窗的 HTML 结构
+                const modal = document.createElement('div')
+                modal.className = 'modal-overlay'
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <div class="modal-title">超星学习通九九助手</div>
+                        <p>您可能是第一次使用此脚本，此脚本答题需要连接题库，请选择您登陆题库的方式</p>
+                        <div class="modal-buttons">
+                            <button id="weChatBinddddd">微信登录(赠送100次)</button>
+                            <button id="randomGGG">随机生成Token</button>
+                            <button id="manualalala">手动填写Token</button>
+                            <button id="cancaal">取消</button>
+                        </div>
+                    </div>
+                `;
+                $d.body.appendChild(modal)
+                const weChatBtn = modal.querySelector('#weChatBinddddd')
+                const randomBtn = modal.querySelector('#randomGGG')
+                const manualBtn = modal.querySelector('#manualalala')
+                const canalBtn = modal.querySelector('#cancaal')
+                let weChatWait = false
+                const reg = /^[0-9a-z]{32}$/ig
+                weChatBtn.addEventListener('click', () => {
+                    if(weChatWait){
                         return
                     }
-                    await brequest({ "url": hostList[i] + 'api/status?ran=' + String(Date.now()) + '&version=' + $version, timeout: 3e3 }).then((checkResult) => {
-                        if (!checkResult) {
-                            i++
-                            r(i, success)
-                        } else if (checkResult.status == 't') {
-                            host = hostList[i]
-                            s(success)
-                        } else if (checkResult.status == 'f') {
-                            alert('【超星学习通九九助手】服务器暂停服务，请耐心等待恢复\n' + checkResult.info);
-                            fail()
-                        } else if (checkResult.status == 'u') {
-                            let l = confirm('【超星学习通九九助手】当前脚本有新版本，点击确定前往更新\n交流群：585739825');
-                            if (l) {
-                                $w.top.location.href = checkResult.url
-                                fail()
-                                return
+                    weChatWait = true
+                    weChatBtn.innerHTML = '请求中'
+                    GM_setValue('waitForLogin',true)
+                    GM_xmlhttpRequest({
+                        url:host+'ajax.php?act=loginBySocial&type=wx',
+                        method:'GET',
+                        timeout:5000,
+                        onabort(){
+                            weChatWait = false
+                            weChatBtn.innerHTML='微信登录(请重试)'
+                        },
+                        onerror(){
+                            weChatWait = false
+                            weChatBtn.innerHTML='微信登录(请重试)'
+                        },
+                        ontimeout(){
+                            weChatWait = false
+                            weChatBtn.innerHTML='微信登录(请重试)'
+                        },
+                        onload(res){
+                            weChatWait = false
+                            try{
+                                let result = JSON.parse(res.responseText)
+                                if(result.code==1){
+                                    window.open(result.data)
+                                    let r = setInterval(()=>{
+                                        let token = GM_getValue('waitForLogin',false)
+                                        if(token&&reg.test(token)){
+                                            clearTimeout(r)
+                                            modal.style.display = 'none'
+                                            s([false,token])
+                                        }
+                                    },200)
+                                }else{
+                                    alert(result.msg)
+                                    weChatBtn.innerHTML='微信登录(请重试)'
+                                }
+                            }catch(e){
+                                console.log(e)
+                                weChatBtn.innerHTML='微信登录(请重试)'
                             }
-                            host = hostList[i]
-                            s(success)
                         }
                     })
-                }
-                let sTryTime = 0
-                function s(success) {
-                    sTryTime += 1
-                    if (sTryTime > 4) {
-                        alert('【超星学习通九九助手】token注册失败，请刷新页面重试\nQQ反馈群:585739825')
-                        fail()
+                })
+                randomBtn.addEventListener('click', () => {
+                    modal.style.display = 'none';
+                    let token = randomString(true)
+                    s([true,token])
+                })
+                manualBtn.addEventListener('click', () => {
+                    let info = '请输入您的token'
+                    while(true){
+                        let token = prompt(info)
+                        if(reg.test(token)){
+                            modal.style.display = 'none';
+                            s([false,token])
+                            break
+                        }else if(token===false||token===null){
+                            return
+                        }else{
+                            info = 'Token格式不符，请重新输入或者取消'
+                        }
                     }
-                    let token = getTkToken(),
-                        reg = /^[0-9a-z]{32}$/ig;
-                    //如果获取了旧版token或者哪里都无法获取，就重新生成一个
-                    if (['66666666666666666666666666666666', '', null, undefined, false].includes(token) || !reg.test(token)) {
-                        let tempToken = randomString(true)
+                })
+                canalBtn.addEventListener('click', () => {
+                    modal.style.display = 'none';
+                })
+            })
+        }
+    hostCheck = () => {
+        return new Promise((success, fail) => {
+            async function r(i, success) {
+                if (i >= hostList.length) {
+                    let z = confirm('【超星学习通九九助手】\n所有服务器均不可用，请稍后刷新重试或尝试更换网络\n请不要使用翻墙软件\n如果仍无法使用，请点击“取消”按钮自动前往更新脚本\nQQ反馈群：585739825');
+                    if (!z) {
+                        $w.top.location.href = 'http://f12.cx'
+                    }
+                    fail()
+                    return
+                }
+                await brequest({ "url": hostList[i] + 'api/status?ran=' + String(Date.now()) + '&version=' + $version, timeout: 3e3 }).then((checkResult) => {
+                    if (!checkResult) {
+                        i++
+                        r(i, success)
+                    } else if (checkResult.status == 't') {
+                        host = hostList[i]
+                        s(success)
+                    } else if (checkResult.status == 'f') {
+                        alert('【超星学习通九九助手】服务器暂停服务，请耐心等待恢复\n' + checkResult.info);
+                        fail()
+                    } else if (checkResult.status == 'u') {
+                        let l = confirm('【超星学习通九九助手】当前脚本有新版本，点击确定前往更新\n交流群：585739825');
+                        if (l) {
+                            $w.top.location.href = checkResult.url
+                            fail()
+                            return
+                        }
+                        host = hostList[i]
+                        s(success)
+                    }
+                })
+            }
+            let sTryTime = 0
+            async function s(success) {
+                sTryTime += 1
+                if (sTryTime > 4) {
+                    alert('【超星学习通九九助手】token注册失败，请刷新页面重试\nQQ反馈群:585739825')
+                    fail()
+                }
+                let token = getTkToken(),
+                    reg = /^[0-9a-z]{32}$/ig;
+                //如果获取了旧版token或者哪里都无法获取，就重新生成一个
+                if (['66666666666666666666666666666666', '', null, undefined, false].includes(token) || !reg.test(token)) {
+                    // let tempToken = randomString(true)
+                    let tempTokens = await tokenGetter()
+                    let tempToken = tempTokens[1]
+                    if (tempTokens[0]) {//为true代表随机生成，需要注册后使用
                         register(tempToken).then((result) => {
                             if (!result || result.code != 1) {
                                 setTimeout(() => {
@@ -717,12 +865,18 @@
                             success()
                         })
                     } else {
+                        token = tempToken
+                        $w.localStorage.setItem("shenchanranToken", token)
+                        GM_setValue('shenchanranToken', token)
                         success()
                     }
+                } else {
+                    success()
                 }
-                r(0, success)
-            })
-        }
+            }
+            r(0, success)
+        })
+    }
     // 监听此页面，判断用户是否需要刷学习次数，如果需要，就点进章节
     if ($l.includes('mycourse/studentcourse?')) {
         let i = setInterval(() => {
@@ -750,6 +904,19 @@
                         if (confirm('【超星学习通九九助手】\n\n您当前充值的token不是脚本正在使用的Token\n是否自动切换为您充值的token？')) {
                             GM_setValue('shenchanranToken', ctoken)
                         }
+                    }
+                }
+            }
+        }
+    }
+    else if ($l.includes('/user/')) {
+        for(let h of hostList){
+            if($l.includes(h)){
+                if(GM_getValue('waitForLogin',false)===true){
+                    let token = getCookie('token')
+                    if(token){
+                        GM_setValue('waitForLogin',token)
+                        alert('题库登陆成功，请回到刷课页面')
                     }
                 }
             }
@@ -1852,7 +2019,7 @@
             try {
                 GM_xmlhttpRequest({
                     method: 'GET',
-                    url: $siteHost + '/ananas/ueditor/ueditor.parse.js?t='+Math.round(new Date() / 1000),
+                    url: $siteHost + '/ananas/ueditor/ueditor.parse.js?t=' + Math.round(new Date() / 1000),
                     data: 'string',
                     timeout: 3000,
                     onload(res) {
