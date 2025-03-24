@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.3.6
+// @version      2.3.7
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -402,6 +402,12 @@
         },
         brequest = (data) => {
             return new Promise((success, fail) => {
+                if(data.url.includes('?')){
+                    data.url += '&'
+                }else{
+                    data.url += '?'
+                }
+                data.url += 'ran=' + String(Date.now())
                 if (!data.method) {
                     data.method = 'get'
                 }
@@ -816,7 +822,7 @@
                     fail()
                     return
                 }
-                await brequest({ "url": hostList[i] + 'api/status?ran=' + String(Date.now()) + '&version=' + $version, timeout: 3e3 }).then((checkResult) => {
+                await brequest({ "url": hostList[i] + 'api/status?version=' + $version, timeout: 3e3 }).then((checkResult) => {
                     if (!checkResult) {
                         i++
                         r(i, success)
@@ -2001,7 +2007,7 @@
                 }
                 await sleep(500);
             }
-            let videoV = '2025-0314-1842'
+            let videoV = '2025-0317-1842'
             const classId = $s['clazzid'] || $s['classid'] || $s['classId'] || $s['classId'],
                 courseId = $s['courseid'] || $s['courseId'],
                 cpi = $s['cpi'],
