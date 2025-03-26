@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.3.7
+// @version      2.3.8
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -402,9 +402,9 @@
         },
         brequest = (data) => {
             return new Promise((success, fail) => {
-                if(data.url.includes('?')){
+                if (data.url.includes('?')) {
                     data.url += '&'
-                }else{
+                } else {
                     data.url += '?'
                 }
                 data.url += 'ran=' + String(Date.now())
@@ -669,7 +669,7 @@
         },
         tokenGetter = () => {
             return new Promise((s, f) => {
-                GM_setValue('waitForLogin',false)
+                GM_setValue('waitForLogin', false)
                 const style = document.createElement('style')
                 style.textContent = `
                     .modal-overlay {
@@ -739,49 +739,49 @@
                 let weChatWait = false
                 const reg = /^[0-9a-z]{32}$/ig
                 weChatBtn.addEventListener('click', () => {
-                    if(weChatWait){
+                    if (weChatWait) {
                         return
                     }
                     weChatWait = true
                     weChatBtn.innerHTML = '请求中'
-                    GM_setValue('waitForLogin',true)
+                    GM_setValue('waitForLogin', true)
                     GM_xmlhttpRequest({
-                        url:host+'ajax.php?act=loginBySocial&type=wx',
-                        method:'GET',
-                        timeout:5000,
-                        onabort(){
+                        url: host + 'ajax.php?act=loginBySocial&type=wx',
+                        method: 'GET',
+                        timeout: 5000,
+                        onabort() {
                             weChatWait = false
-                            weChatBtn.innerHTML='微信登录(请重试)'
+                            weChatBtn.innerHTML = '微信登录(请重试)'
                         },
-                        onerror(){
+                        onerror() {
                             weChatWait = false
-                            weChatBtn.innerHTML='微信登录(请重试)'
+                            weChatBtn.innerHTML = '微信登录(请重试)'
                         },
-                        ontimeout(){
+                        ontimeout() {
                             weChatWait = false
-                            weChatBtn.innerHTML='微信登录(请重试)'
+                            weChatBtn.innerHTML = '微信登录(请重试)'
                         },
-                        onload(res){
+                        onload(res) {
                             weChatWait = false
-                            try{
+                            try {
                                 let result = JSON.parse(res.responseText)
-                                if(result.code==1){
+                                if (result.code == 1) {
                                     window.open(result.data)
-                                    let r = setInterval(()=>{
-                                        let token = GM_getValue('waitForLogin',false)
-                                        if(token&&reg.test(token)){
+                                    let r = setInterval(() => {
+                                        let token = GM_getValue('waitForLogin', false)
+                                        if (token && reg.test(token)) {
                                             clearTimeout(r)
                                             modal.style.display = 'none'
-                                            s([false,token])
+                                            s([false, token])
                                         }
-                                    },200)
-                                }else{
+                                    }, 200)
+                                } else {
                                     alert(result.msg)
-                                    weChatBtn.innerHTML='微信登录(请重试)'
+                                    weChatBtn.innerHTML = '微信登录(请重试)'
                                 }
-                            }catch(e){
+                            } catch (e) {
                                 console.log(e)
-                                weChatBtn.innerHTML='微信登录(请重试)'
+                                weChatBtn.innerHTML = '微信登录(请重试)'
                             }
                         }
                     })
@@ -789,19 +789,19 @@
                 randomBtn.addEventListener('click', () => {
                     modal.style.display = 'none';
                     let token = randomString(true)
-                    s([true,token])
+                    s([true, token])
                 })
                 manualBtn.addEventListener('click', () => {
                     let info = '请输入您的token'
-                    while(true){
+                    while (true) {
                         let token = prompt(info)
-                        if(reg.test(token)){
+                        if (reg.test(token)) {
                             modal.style.display = 'none';
-                            s([false,token])
+                            s([false, token])
                             break
-                        }else if(token===false||token===null){
+                        } else if (token === false || token === null) {
                             return
-                        }else{
+                        } else {
                             info = 'Token格式不符，请重新输入或者取消'
                         }
                     }
@@ -916,12 +916,12 @@
         }
     }
     else if ($l.includes('/user/')) {
-        for(let h of hostList){
-            if($l.includes(h)){
-                if(GM_getValue('waitForLogin',false)===true){
+        for (let h of hostList) {
+            if ($l.includes(h)) {
+                if (GM_getValue('waitForLogin', false) === true) {
                     let token = getCookie('token')
-                    if(token){
-                        GM_setValue('waitForLogin',token)
+                    if (token) {
+                        GM_setValue('waitForLogin', token)
                         alert('题库登陆成功，请回到刷课页面')
                     }
                 }
@@ -2756,7 +2756,7 @@
                                                             continue;
                                                         }
                                                         o = trim(o).replaceAll(/([\x00-\x1F\x7F]|\s)+/ig, '');
-                                                        if (o.includes(tkRightAnswer) || tkRightAnswer.includes(o)) {
+                                                        function fuckMe() {
                                                             for (let j = 0, a = optionLis.length; j < a; j++) {
                                                                 let nowO = optionLis[j];
                                                                 if (nowO.getAttribute('id-param') == questionid.replace('answer', '').replace('s', '')) {
@@ -2780,6 +2780,15 @@
                                                                     }
                                                                 }
                                                             }
+                                                        }
+                                                        if (o == tkRightAnswer){
+                                                            fuckMe()
+                                                            if(type == '单选题'){
+                                                                break//1年前写的15层if，再加一层function来修复出现的新问题，单选题的选项完全匹配时停止后续判断，防止选项过于判断包含导致答案正确但是选择错误
+                                                            }
+                                                        }
+                                                        if (o.includes(tkRightAnswer) || tkRightAnswer.includes(o)) {
+                                                            fuckMe()
                                                         }
                                                     }
                                                 } else {
@@ -3395,10 +3404,10 @@
                     for (let j = 0, k = optionEs.length; j < k; j++) {
                         let optionE = optionEs[j],
                             option = trim(optionE.innerHTML).replace(/^[A-Z]([\x00-\x1F\x7F]|\s)+/ig, '').replaceAll(/([\x00-\x1F\x7F]|\s)+/ig, '');
-                        if (option.includes(answer) || answer.includes(option)) {
+                        if (option==answer||option.includes(answer) || answer.includes(option)) {
                             hasAnswer = true
                             optionE.getElementsByTagName('input')[0].click();
-                            if (tmT == '0') {
+                            if (tmT == '0'&&option==answer) {//单选题，并且选项完全匹配，停止后续判断，防止嵌套问题
                                 break;
                             }
                         }
