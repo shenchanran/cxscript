@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.3.8
+// @version      2.3.9
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -2786,8 +2786,7 @@
                                                             if(type == '单选题'){
                                                                 break//1年前写的15层if，再加一层function来修复出现的新问题，单选题的选项完全匹配时停止后续判断，防止选项过于判断包含导致答案正确但是选择错误
                                                             }
-                                                        }
-                                                        if (o.includes(tkRightAnswer) || tkRightAnswer.includes(o)) {
+                                                        }else if (o.includes(tkRightAnswer) || tkRightAnswer.includes(o)) {
                                                             fuckMe()
                                                         }
                                                     }
