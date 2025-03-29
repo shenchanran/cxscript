@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.3.9
+// @version      2.4.0
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -2262,7 +2262,11 @@
                                             break loopType;
                                         }
                                         logs.addLog('开始刷视频：' + jobData.property.name)
-                                        let videoDatas = getEnc(attDuration, attDurationEnc, videoFaceCaptureEnc, classId, $uid, jobData.jobid, videoInfo.objectid, videoInfo.duration, beisu, videoInfo.dtoken, jobData.otherInfo, jobData.property.rt || '0.9', jobData.property.module.includes('audio') ? 'Audio' : 'Video'),
+                                        let dtype = 'Video'
+                                        if(jobData.property.module.includes('audio')||jobData.property.module.includes('voice')){
+                                            dtype = 'Audio'
+                                        }
+                                        let videoDatas = getEnc(attDuration, attDurationEnc, videoFaceCaptureEnc, classId, $uid, jobData.jobid, videoInfo.objectid, videoInfo.duration, beisu, videoInfo.dtoken, jobData.otherInfo, jobData.property.rt || '0.9', dtype),
                                             errTimes = 0,
                                             hasErr = false,
                                             min = 0,
