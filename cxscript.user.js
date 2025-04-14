@@ -2007,7 +2007,7 @@
                 }
                 await sleep(500);
             }
-            let videoV = '2025-0317-1842'
+            let videoV = '2025-0329-1842'
             const classId = $s['clazzid'] || $s['classid'] || $s['classId'] || $s['classId'],
                 courseId = $s['courseid'] || $s['courseId'],
                 cpi = $s['cpi'],
