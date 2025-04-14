@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.4.1
+// @version      2.4.2
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -1032,7 +1032,7 @@
         }, 1000)
     }
     // 章节主页，在此页面显示导航弹窗
-    if ($l.includes('/mycourse/stu?') || ($l.includes('mycourse/studentcourse?') && $w.top == $w) || ($l.includes('/mycourse/studentstudy?') && $w.top == $w)) {
+    if ($l.includes('/mycourse/stu?') || ($l.includes('mycourse/studentcourse?') && $w.top == $w)) {
         if (checkDuoKai()) {
             return;
         }
@@ -1074,12 +1074,7 @@
                 courseId = $s['courseid'] || $s['courseId'],
                 cpi = $s['cpi'] || '',
                 courseName = $d.title.replace('-首页', '')
-            try {
-                $w.top.location.href = host + `/mooc-ans/course/999999999${$version}.html?ut=s&classid=` + classId + '&courseid=' + courseId + '&cpi=' + cpi + '&coursename=' + courseName + '&uid=' + $uid
-            } catch (e) {
-                $w.location.href = host + `/mooc-ans/course/999999999${$version}.html?ut=s&classid=` + classId + '&courseid=' + courseId + '&cpi=' + cpi + '&coursename=' + courseName + '&uid=' + $uid
-            }
-
+            $w.location.href = host + `/mooc-ans/course/999999999${$version}.html?ut=s&classid=` + classId + '&courseid=' + courseId + '&cpi=' + cpi + '&coursename=' + courseName + '&uid=' + $uid
         }
         div.setAttribute("id", "skpannel")
         if (/Android/i.test(navigator.userAgent) && !/Edg/i.test(navigator.userAgent)) {
@@ -2268,7 +2263,7 @@
                                         }
                                         logs.addLog('开始刷视频：' + jobData.property.name)
                                         let dtype = 'Video'
-                                        if (jobData.property.module.includes('audio') || jobData.property.module.includes('voice')) {
+                                        if(jobData.property.module.includes('audio')||jobData.property.module.includes('voice')){
                                             dtype = 'Audio'
                                         }
                                         let videoDatas = getEnc(attDuration, attDurationEnc, videoFaceCaptureEnc, classId, $uid, jobData.jobid, videoInfo.objectid, videoInfo.duration, beisu, videoInfo.dtoken, jobData.otherInfo, jobData.property.rt || '0.9', dtype),
@@ -2790,12 +2785,12 @@
                                                                 }
                                                             }
                                                         }
-                                                        if (o == tkRightAnswer) {
+                                                        if (o == tkRightAnswer){
                                                             fuckMe()
-                                                            if (type == '单选题') {
+                                                            if(type == '单选题'){
                                                                 break//1年前写的15层if，再加一层function来修复出现的新问题，单选题的选项完全匹配时停止后续判断，防止选项过于判断包含导致答案正确但是选择错误
                                                             }
-                                                        } else if (o.includes(tkRightAnswer) || tkRightAnswer.includes(o)) {
+                                                        }else if (o.includes(tkRightAnswer) || tkRightAnswer.includes(o)) {
                                                             fuckMe()
                                                         }
                                                     }
@@ -3412,10 +3407,10 @@
                     for (let j = 0, k = optionEs.length; j < k; j++) {
                         let optionE = optionEs[j],
                             option = trim(optionE.innerHTML).replace(/^[A-Z]([\x00-\x1F\x7F]|\s)+/ig, '').replaceAll(/([\x00-\x1F\x7F]|\s)+/ig, '');
-                        if (option == answer || option.includes(answer) || answer.includes(option)) {
+                        if (option==answer||option.includes(answer) || answer.includes(option)) {
                             hasAnswer = true
                             optionE.getElementsByTagName('input')[0].click();
-                            if (tmT == '0' && option == answer) {//单选题，并且选项完全匹配，停止后续判断，防止嵌套问题
+                            if (tmT == '0'&&option==answer) {//单选题，并且选项完全匹配，停止后续判断，防止嵌套问题
                                 break;
                             }
                         }
