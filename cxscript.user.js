@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.4.2
+// @version      2.4.3
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -2007,7 +2007,7 @@
                 }
                 await sleep(500);
             }
-            let videoV = '2025-0329-1842'
+            let videoV = '2025-0416-1842'
             const classId = $s['clazzid'] || $s['classid'] || $s['classId'] || $s['classId'],
                 courseId = $s['courseid'] || $s['courseId'],
                 cpi = $s['cpi'],
@@ -2557,14 +2557,23 @@
                                                     inputElements = questionElement.querySelectorAll('input'),
                                                     questionId = '0',
                                                     typeN = '666',
-                                                    question = questionElement.getElementsByClassName('Py-m1-title fs16')[0].innerHTML
+                                                    question = questionElement.getElementsByClassName('Py-m1-title fs16')[0].innerHTML,
+                                                    tiankongsize = 0,
+                                                    tiankongNew = false//是否为新版填空
                                                 question = handleImgs(question).replace(/(<([^>]+)>)/ig, '').replace(/[0-9]{1,3}\.\[(.*?)\]/ig, '').replaceAll('\n', '').replace(/^([\x00-\x1F\x7F]|\s)+/ig, '').replace(/([\x00-\x1F\x7F]|\s)+$/ig, '');
                                                 for (let z = 0, k = inputElements.length; z < k; z++) {
                                                     try {
                                                         let id = inputElements[z].id
+                                                        let name = inputElements[z].getAttribute('name')
+                                                        if(name&&name.includes('tiankongsize')&&inputElements[z].value){
+                                                            tiankongsize = inputElements[z].value
+                                                        }
                                                         if (id.includes('answer')) {
                                                             if (id.includes('answertype')) {
                                                                 typeN = inputElements[z].value
+                                                                if (/^answertype\d+/.test(id)) {
+                                                                    questionId = id.replace('answertype', 'answer')
+                                                                }
                                                             } else {
                                                                 if (/answer(s)?\d+/.test(id)) {
                                                                     questionId = id.replace('answers', 'answer')
@@ -2616,17 +2625,43 @@
                                                     optionList = { '对': 'A', '错': 'B' }
                                                 } else {//填空题
                                                     inputList = questionElement.querySelectorAll('input.answerInput')
-                                                    if (!inputList || inputList.length < 1) {
-                                                        logs.addLog('无法找到填空题信息：', 'red');
+                                                    if (!inputList || inputList.length < 1) {//旧版填空答题
+                                                        tiankongNew = true
+                                                        inputList = []
+                                                        if(tiankongsize==0){//旧版无法找到，并且新版也无
+                                                            logs.addLog('无法找到填空题信息：', 'red');
+                                                            continue
+                                                        }else{
+                                                            let iframes = questionElement.querySelectorAll('iframe[id^="ueditor_"]');
+                                                            for(let iframe of iframes){
+                                                                if(iframe){
+                                                                    let d = iframe.contentDocument || iframe.contentWindow.document
+                                                                    if(d){
+                                                                        let p = d.querySelector('p')
+                                                                        if(p){
+                                                                            inputList.push(p)
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                    if(inputList.lengh==0||inputList.length!=tiankongsize){
+                                                        console.log(inputList)
+                                                        console.log(tiankongsize)
+                                                        logs.addLog('填空选项不匹配：', 'red');
                                                         continue
                                                     }
                                                 }
+
                                                 questionList.push({
                                                     question,
                                                     type,
                                                     'questionid': questionId,
                                                     'options': optionList,
-                                                    inputList
+                                                    inputList,
+                                                    tiankongsize,
+                                                    tiankongNew
                                                 });
                                                 abledQuestionNum++;
                                             } catch (e) { console.log(e); }
@@ -2799,7 +2834,11 @@
                                                         let answers = tkRightAnswer.split('#!#')
                                                         if (answers.length == inputs.length) {
                                                             answers.forEach((a, b) => {
-                                                                inputs[b].value = a
+                                                                if(questionArray.tiankongNew){//新版
+                                                                    inputs[b].innerText = a
+                                                                }else{
+                                                                    inputs[b].value = a
+                                                                }
                                                             })
                                                             hasAnswer = true;
                                                         }
