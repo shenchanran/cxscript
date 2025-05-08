@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.4.3
+// @version      2.4.4
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -1836,16 +1836,16 @@
                 }
             };
             $w.chuangguan = false;
-            let tkc = () => {
-                setTimeout(() => {
-                    let token = getTkToken()
-                    if (token) {
-                        ctk(tkToken)
-                    }
-                    tkc();
-                }, 6e4);
-            }
-            tkc();
+            // let tkc = () => {
+            //     setTimeout(() => {
+            //         let token = getTkToken()
+            //         if (token) {
+            //             ctk(tkToken)
+            //         }
+            //         tkc();
+            //     }, 6e4);
+            // }
+            // tkc();
             $d.getElementById('courseName').innerHTML = decodeURIComponent($s['coursename']);
             if (/^((?!chrome|android).)*safari/i.test($w.navigator.userAgent)) {
                 $layer("<center>此脚本不支持Safari浏览器<br>请mac/ipad用户<a href='https://www.microsoft.com/zh-cn/edge/download'>安装Microsoft Edge浏览器</a></center>")
@@ -3190,17 +3190,20 @@
                 html.userSelect = html.webkitUserSelect = html.khtmlUserSelect = html.mozUserSelect = html.msUserSelect = 'unset'
                 $d.querySelector('body').removeAttribute('onselectstart')
             } catch (e) { }
-            setInterval(() => {
-                ctk(tkToken)
-            }, 6e4);
+            // setInterval(() => {
+            //     ctk(tkToken)
+            // }, 6e4);
             for (let questionElement of questionsElements) {
                 let questionId = questionElement.getAttribute('data') || questionElement.querySelector('.questionId').value,
                     questionType = $d.getElementsByName('type' + questionId)[0].getAttribute('value'),
                     tm = trim(questionElement.getElementsByClassName('mark_name')[0].innerHTML).replaceAll('\n', '').replace(/^\d+\.([\x00-\x1F\x7F]|\s)*\(.*题([\x00-\x1F\x7F]|\s)*(,|，)([\x00-\x1F\x7F]|\s)*\d*\.?\d*([\x00-\x1F\x7F]|\s)*(分|points)\)([\x00-\x1F\x7F]|\s)*/ig, ''),
                     question = { 'tm': tm, 'questionId': questionId, 'questionType': questionType };
-                while ($w.left < 1) {
+                if ($w.left < 1) {
                     logs.addLog('剩余答题次数不足，考试已暂停，请先<a href="' + host + '?token=' + tkToken + '#2" target="_blank">点我充值</a>（充值后60秒内继续，如果没有继续，请刷新页面）', 'red');
-                    await sleep(6e4)
+                    while ($w.left < 1){
+                        ctk(tkToken)
+                        await sleep(6e4)
+                    }
                 }
                 let optionsElements = $d.getElementsByClassName('choice' + question['questionId']),
                     optionsList = [];
@@ -3329,16 +3332,16 @@
         }
         async function main() {
             let courseId = $s['courseid'] || $s['courseId']
-            let tkc = () => {
-                setTimeout(() => {
-                    let token = getTkToken();
-                    if (token) {
-                        ctk(token);
-                    }
-                    tkc();
-                }, 6e4);
-            }
-            tkc();
+            // let tkc = () => {
+            //     setTimeout(() => {
+            //         let token = getTkToken();
+            //         if (token) {
+            //             ctk(token);
+            //         }
+            //         tkc();
+            //     }, 6e4);
+            // }
+            // tkc();
             await sleep(3000);
             let wrap1000 = $d.querySelector('.wrap1000')
             let div = $d.createElement('div')
@@ -3438,7 +3441,8 @@
                 if (tkResultJson.left < 1) {
                     addLog('答题次数不足，答题自动暂停');
                     while ($w.left < 1) {
-                        await sleep(5000);
+                        ctk(getTkToken())
+                        await sleep(10000);
                     }
                 }
                 if (['0', '1'].includes(tmT)) {
