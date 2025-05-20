@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.4.4
+// @version      2.4.5
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -648,7 +648,7 @@
             let token = GM_getValue('shenchanranToken', false) || $w.localStorage.getItem("shenchanranToken")
             if (token) {
                 GM_setValue('shenchanranToken', token)
-                $w.localStorage.setItem("shenchanranToken", token)
+                $w.localStorage.removeItem('shenchanranToken')
             }
             return token
         },
@@ -866,13 +866,13 @@
                                 }, 500)
                             }
                             token = tempToken
-                            $w.localStorage.setItem("shenchanranToken", token)
+                            $w.localStorage.removeItem('shenchanranToken')
                             GM_setValue('shenchanranToken', token)
                             success()
                         })
                     } else {
                         token = tempToken
-                        $w.localStorage.setItem("shenchanranToken", token)
+                        $w.localStorage.removeItem('shenchanranToken')
                         GM_setValue('shenchanranToken', token)
                         success()
                     }
@@ -1251,7 +1251,7 @@
                         return
                     }
                     tkToken = stkToken
-                    $w.localStorage.setItem("shenchanranToken", tkToken);
+                    $w.localStorage.removeItem('shenchanranToken')
                     GM_setValue('shenchanranToken', tkToken);
                     tokentip.innerHTML = `<p style="color:green;text-align:center;">保存成功</p>`
                     tokentip.style.display = 'block'
@@ -1941,7 +1941,7 @@
                     $layer('配置保存成功，已实时生效')
                     tkToken = stkToken;
                     GM_setValue('shenchanranToken', tkToken);
-                    $w.localStorage.setItem("shenchanranToken", tkToken);
+                    $w.localStorage.removeItem('shenchanranToken')
                     ctk(tkToken)
                 }
             }
