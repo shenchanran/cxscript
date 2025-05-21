@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.4.5
+// @version      2.4.6
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -3370,7 +3370,7 @@
                     addLog('不支持的题型');
                     continue;
                 }
-                let questionE = tmE.querySelector('.fontLabel'),
+                let questionE = tmE.querySelector('.fontLabel')||tmE.querySelector('.Zy_TItle'),//兼容华东理工大学
                     question = trim(questionE.innerHTML),
                     optionsETs = tmE.getElementsByTagName('li'),
                     optionEs = [],
