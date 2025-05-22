@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.4.7
+// @version      2.4.8
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -1129,7 +1129,7 @@
                     cursor: pointer;
                     display: inline-block;
                     line-height: 38px;
-                    margin-left: 10px;" id="tokenTip">次数不对？</span>
+                    margin-left: 10px;" id="tokenTip">刷新次数</span>
                     </span>
                 </span>
             </div>
@@ -1204,15 +1204,23 @@
                 $d.querySelector('#canclesk').addEventListener('click', () => {
                     pannel.style.display = 'none';
                 })
+                let awfawf = 0
                 $d.querySelector('#tokenTip').addEventListener('click', () => {
-                    tokentip.innerHTML = `
-                    <p style="text-indent: 2em;">更换设备、浏览器或者清空浏览器数据会导致token丢失，脚本会自动为您生成一个新Token。</p>
-                    <p style="text-indent: 2em;">如果想找回之前的Token，请查看您的微信或支付宝付款记录，在商品名中有充值过的Token。</p>
-                    <p style="text-indent: 2em;">如果您之前的Token绑定过QQ或微信，请直接访问<a href="http://tiku.tk.icu/" style="color:blue;" target="_blank">题库官网</a>并使用绑定的账号登录，即可找回原Token。</p>
-                    <p style="text-indent: 2em;">找回Token后请将Token复制到当前页面的Token输入框，然后点击保存按钮。</p>
-                    <p style="text-indent: 2em;color:green;">为新Token绑定微信可以获得免费的100答题次数</p>
-                    `
-                    tokentip.style.display = 'block'
+                    let now = Math.round(new Date() / 1000)
+                    if(now-awfawf>10){
+                        awfawf = now
+                        ctk(tkToken)
+                    }else{
+                        tokentip.innerHTML = `
+                        <p style="text-indent: 2em;">如果答题次数有问题，可能是您正在使用的token不是正确token</p>
+                        <p style="text-indent: 2em;">更换设备、浏览器或者清空浏览器数据会导致token丢失，脚本会自动为您生成一个新Token。</p>
+                        <p style="text-indent: 2em;">如果想找回之前的Token，请查看您的微信或支付宝付款记录，在商品名中有充值过的Token。</p>
+                        <p style="text-indent: 2em;">如果您之前的Token绑定过QQ或微信，请直接访问<a href="http://tk.tk.icu/" style="color:blue;" target="_blank">题库官网</a>并使用绑定的账号登录，即可找回原Token。</p>
+                        <p style="text-indent: 2em;">找回Token后请将Token复制到当前页面的Token输入框，然后点击保存按钮。</p>
+                        <p style="text-indent: 2em;color:green;">为新Token绑定微信可以获得免费的100答题次数</p>
+                        `
+                        tokentip.style.display = 'block'
+                    }
                 })
                 $d.querySelector('#saveToken').addEventListener('click', () => {
                     let stkToken = $d.querySelector('#token').value,
@@ -1727,7 +1735,7 @@
                                         <span class="floattipbox">
                                             <input type="number" class="form-control" id="ugyvciuu" readonly="readonly"
                                                 value="9999" /><span class="floatTip"
-                                                id="ciuuq">次数不对？</span></span>&ensp;
+                                                id="ciuuq">刷新次数</span></span>&ensp;
                                         <a class="btn btn-outline-primary" id="payButton" target="_blank">充值</a>
                                     </div>
                                     <small class="form-text text-muted">查题成功一次扣除1次数</small>
@@ -1955,8 +1963,15 @@
                 $w.chuangguan = true;
                 $w.logs.addLog('开始查询任务');
             }
+            let safeafew = 0
             ciuuqButton.onclick = function () {
-                $layer('<p style="text-indent: 2em;">更换设备、浏览器或者清空浏览器数据会导致token丢失，脚本会自动为您生成一个新Token。</p><p style="text-indent: 2em;">如果想找回之前的Token，请查看您的微信或支付宝付款记录，在商品名中有充值过的Token。</p><p style="text-indent: 2em;">如果您之前的Token绑定过QQ或微信，请直接访问<a href="http://tiku.tk.icu/" target="_blank">题库官网</a>并使用绑定的账号登录，即可找回原Token。</p><p style="text-indent: 2em;">找回Token后请将Token复制到当前页面的Token输入框，然后点击保存按钮。</p><p style="text-indent: 2em;color:green;">为新Token绑定微信可以获得免费的100答题次数</p>')
+                let now = Math.round(new Date() / 1000)
+                if(now-safeafew>10){
+                    safeafew = now
+                    ctk(tkToken)
+                }else{
+                    $layer('<p style="text-indent: 2em;">如果答题次数有问题，可能是您正在使用的token不是正确token</p><p style="text-indent: 2em;">更换设备、浏览器或者清空浏览器数据会导致token丢失，脚本会自动为您生成一个新Token。</p><p style="text-indent: 2em;">如果想找回之前的Token，请查看您的微信或支付宝付款记录，在商品名中有充值过的Token。</p><p style="text-indent: 2em;">如果您之前的Token绑定过QQ或微信，请直接访问<a href="http://tk.tk.icu/" target="_blank">题库官网</a>并使用绑定的账号登录，即可找回原Token。</p><p style="text-indent: 2em;">找回Token后请将Token复制到当前页面的Token输入框，然后点击保存按钮。</p><p style="text-indent: 2em;color:green;">为新Token绑定微信可以获得免费的100答题次数</p>')
+                }
             }
             wicButton.onclick = function () {
                 $layer('<p style="text-indent: 2em;">如果您的课程章节学完一节才能解锁下一节，不能跳过，那么这门课就是闯关模式，必须点击闯关模式按钮才能进行刷课</p>')
