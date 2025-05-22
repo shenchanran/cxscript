@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.4.6
+// @version      2.4.7
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -898,22 +898,6 @@
                 }
             }
         }, 500)
-    }
-    else if ($l.includes('return_url.php?pid=1000')) {//防止有用户充值到其他token上
-        let scriptToken = GM_getValue('shenchanranToken', 'none'),
-            reg = /^[0-9a-z]{32}$/
-        if (reg.test(scriptToken) && GM_getValue('tkLeft', 0) == 0) {//确定脚本已经生成了token,并且答题次数为0
-            for (host of hostList) {
-                if (host.includes($w.location.host)) {
-                    let ctoken = getCookie('token')
-                    if (reg.test(ctoken) && ctoken != scriptToken) {
-                        if (confirm('【超星学习通九九助手】\n\n您当前充值的token不是脚本正在使用的Token\n是否自动切换为您充值的token？')) {
-                            GM_setValue('shenchanranToken', ctoken)
-                        }
-                    }
-                }
-            }
-        }
     }
     else if ($l.includes('/user/')) {
         for (let h of hostList) {
