@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.4.8
+// @version      2.4.9
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -2006,7 +2006,7 @@
                 }
                 await sleep(500);
             }
-            let videoV = '2025-0416-1842'
+            let videoV = '2025-0624-1842'
             const classId = $s['clazzid'] || $s['classid'] || $s['classId'] || $s['classId'],
                 courseId = $s['courseid'] || $s['courseId'],
                 cpi = $s['cpi'],
@@ -3151,40 +3151,7 @@
             marking_left_280.setAttribute('style', 'display:flex;flex-direction:column;')
             logs.addLog('开始考试', 'green')
             ctk(tkToken)
-            async function collect() {
-                return new Promise((success, fali) => {
-                    GM_xmlhttpRequest({
-                        url: $l.replace('&newMooc=true', '&newMooc='),
-                        method: 'get',
-                        timeout: 3000,
-                        onload: (res) => {
-                            if (res.status == 200) {
-                                data = JSON.stringify({
-                                    s: res.responseText
-                                })
-                                GM_xmlhttpRequest({
-                                    url: host + 'api/examCollect?courseid=' + courseId + '&token=' + tkToken,
-                                    method: 'post',
-                                    timeout: 10000,
-                                    headers: {
-                                        "Content-Type": "application/json"
-                                    },
-                                    data: data,
-                                    onload: success,
-                                    onerror: success,
-                                    onabort: success,
-                                    ontimeout: success
-                                })
-                            } else { success() }
-                        },
-                        onerror: success,
-                        onabort: success,
-                        ontimeout: success
-                    })
-                })
-            }
             try {
-                await collect()
                 const html = $d.querySelector('html').style
                 html.userSelect = html.webkitUserSelect = html.khtmlUserSelect = html.mozUserSelect = html.msUserSelect = 'unset'
                 $d.querySelector('body').removeAttribute('onselectstart')
