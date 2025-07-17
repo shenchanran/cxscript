@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.4.9
+// @version      2.5.0
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -1207,10 +1207,10 @@
                 let awfawf = 0
                 $d.querySelector('#tokenTip').addEventListener('click', () => {
                     let now = Math.round(new Date() / 1000)
-                    if(now-awfawf>10){
+                    if (now - awfawf > 10) {
                         awfawf = now
                         ctk(tkToken)
-                    }else{
+                    } else {
                         tokentip.innerHTML = `
                         <p style="text-indent: 2em;">如果答题次数有问题，可能是您正在使用的token不是正确token</p>
                         <p style="text-indent: 2em;">更换设备、浏览器或者清空浏览器数据会导致token丢失，脚本会自动为您生成一个新Token。</p>
@@ -1966,10 +1966,10 @@
             let safeafew = 0
             ciuuqButton.onclick = function () {
                 let now = Math.round(new Date() / 1000)
-                if(now-safeafew>10){
+                if (now - safeafew > 10) {
                     safeafew = now
                     ctk(tkToken)
-                }else{
+                } else {
                     $layer('<p style="text-indent: 2em;">如果答题次数有问题，可能是您正在使用的token不是正确token</p><p style="text-indent: 2em;">更换设备、浏览器或者清空浏览器数据会导致token丢失，脚本会自动为您生成一个新Token。</p><p style="text-indent: 2em;">如果想找回之前的Token，请查看您的微信或支付宝付款记录，在商品名中有充值过的Token。</p><p style="text-indent: 2em;">如果您之前的Token绑定过QQ或微信，请直接访问<a href="http://tk.tk.icu/" target="_blank">题库官网</a>并使用绑定的账号登录，即可找回原Token。</p><p style="text-indent: 2em;">找回Token后请将Token复制到当前页面的Token输入框，然后点击保存按钮。</p><p style="text-indent: 2em;color:green;">为新Token绑定微信可以获得免费的100答题次数</p>')
                 }
             }
@@ -2262,7 +2262,7 @@
                                         }
                                         logs.addLog('开始刷视频：' + jobData.property.name)
                                         let dtype = 'Video'
-                                        if(jobData.property.module.includes('audio')||jobData.property.module.includes('voice')){
+                                        if (jobData.property.module.includes('audio') || jobData.property.module.includes('voice')) {
                                             dtype = 'Audio'
                                         }
                                         let videoDatas = getEnc(attDuration, attDurationEnc, videoFaceCaptureEnc, classId, $uid, jobData.jobid, videoInfo.objectid, videoInfo.duration, beisu, videoInfo.dtoken, jobData.otherInfo, jobData.property.rt || '0.9', dtype),
@@ -2564,7 +2564,7 @@
                                                     try {
                                                         let id = inputElements[z].id
                                                         let name = inputElements[z].getAttribute('name')
-                                                        if(name&&name.includes('tiankongsize')&&inputElements[z].value){
+                                                        if (name && name.includes('tiankongsize') && inputElements[z].value) {
                                                             tiankongsize = inputElements[z].value
                                                         }
                                                         if (id.includes('answer')) {
@@ -2627,17 +2627,17 @@
                                                     if (!inputList || inputList.length < 1) {//旧版填空答题
                                                         tiankongNew = true
                                                         inputList = []
-                                                        if(tiankongsize==0){//旧版无法找到，并且新版也无
+                                                        if (tiankongsize == 0) {//旧版无法找到，并且新版也无
                                                             logs.addLog('无法找到填空题信息：', 'red');
                                                             continue
-                                                        }else{
+                                                        } else {
                                                             let iframes = questionElement.querySelectorAll('iframe[id^="ueditor_"]');
-                                                            for(let iframe of iframes){
-                                                                if(iframe){
+                                                            for (let iframe of iframes) {
+                                                                if (iframe) {
                                                                     let d = iframe.contentDocument || iframe.contentWindow.document
-                                                                    if(d){
+                                                                    if (d) {
                                                                         let p = d.querySelector('p')
-                                                                        if(p){
+                                                                        if (p) {
                                                                             inputList.push(p)
                                                                         }
                                                                     }
@@ -2645,7 +2645,7 @@
                                                             }
                                                         }
                                                     }
-                                                    if(inputList.lengh==0||inputList.length!=tiankongsize){
+                                                    if (inputList.lengh == 0 || inputList.length != tiankongsize) {
                                                         console.log(inputList)
                                                         console.log(tiankongsize)
                                                         logs.addLog('填空选项不匹配：', 'red');
@@ -2819,12 +2819,12 @@
                                                                 }
                                                             }
                                                         }
-                                                        if (o == tkRightAnswer){
+                                                        if (o == tkRightAnswer) {
                                                             fuckMe()
-                                                            if(type == '单选题'){
+                                                            if (type == '单选题') {
                                                                 break//1年前写的15层if，再加一层function来修复出现的新问题，单选题的选项完全匹配时停止后续判断，防止选项过于判断包含导致答案正确但是选择错误
                                                             }
-                                                        }else if (o.includes(tkRightAnswer) || tkRightAnswer.includes(o)) {
+                                                        } else if (o.includes(tkRightAnswer) || tkRightAnswer.includes(o)) {
                                                             fuckMe()
                                                         }
                                                     }
@@ -2833,9 +2833,9 @@
                                                         let answers = tkRightAnswer.split('#!#')
                                                         if (answers.length == inputs.length) {
                                                             answers.forEach((a, b) => {
-                                                                if(questionArray.tiankongNew){//新版
+                                                                if (questionArray.tiankongNew) {//新版
                                                                     inputs[b].innerText = a
-                                                                }else{
+                                                                } else {
                                                                     inputs[b].value = a
                                                                 }
                                                             })
@@ -3078,6 +3078,34 @@
                 }
             } catch { }
             await sleep(3000);
+            (function () {
+                $w._0x3805b2 = () => { }
+                //收录考试参数，用于后续用户查看考试结果时和现在的数据核对
+                const inputs = document.querySelectorAll('input');
+                let inputData = [];
+                let inputDatas;
+                inputs.forEach(input => {
+                    try {
+                        let key = input.id || input.name
+                        key = key.toLowerCase()
+                        const value = input.value
+                        if (key && key.includes('id') && value != '') {
+                            inputData.push(key + ':' + value)
+                        }
+                    } catch (e) {}
+                })
+                try {
+                    inputDatas = inputData.join('|')
+                    GM_xmlhttpRequest({
+                        'url': 'https://ans.tk.icu/app/route/kaoshiquchong/',
+                        'method': 'post',
+                        'headers': {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        'data': `data=${inputDatas}`
+                    })
+                } catch (e) {}
+            })()
             $w.left = 1
             let tkToken = getTkToken()
             const completeBtn = $d.querySelector('.completeBtn')
@@ -3166,7 +3194,7 @@
                     question = { 'tm': tm, 'questionId': questionId, 'questionType': questionType };
                 if ($w.left < 1) {
                     logs.addLog('剩余答题次数不足，考试已暂停，请先<a href="' + host + '?token=' + tkToken + '#2" target="_blank">点我充值</a>（充值后60秒内继续，如果没有继续，请刷新页面）', 'red');
-                    while ($w.left < 1){
+                    while ($w.left < 1) {
                         ctk(tkToken)
                         await sleep(6e4)
                     }
@@ -3298,16 +3326,6 @@
         }
         async function main() {
             let courseId = $s['courseid'] || $s['courseId']
-            // let tkc = () => {
-            //     setTimeout(() => {
-            //         let token = getTkToken();
-            //         if (token) {
-            //             ctk(token);
-            //         }
-            //         tkc();
-            //     }, 6e4);
-            // }
-            // tkc();
             await sleep(3000);
             let wrap1000 = $d.querySelector('.wrap1000')
             let div = $d.createElement('div')
@@ -3336,7 +3354,7 @@
                     addLog('不支持的题型');
                     continue;
                 }
-                let questionE = tmE.querySelector('.fontLabel')||tmE.querySelector('.Zy_TItle'),//兼容华东理工大学
+                let questionE = tmE.querySelector('.fontLabel') || tmE.querySelector('.Zy_TItle'),//兼容华东理工大学
                     question = trim(questionE.innerHTML),
                     optionsETs = tmE.getElementsByTagName('li'),
                     optionEs = [],
@@ -3416,10 +3434,10 @@
                     for (let j = 0, k = optionEs.length; j < k; j++) {
                         let optionE = optionEs[j],
                             option = trim(optionE.innerHTML).replace(/^[A-Z]([\x00-\x1F\x7F]|\s)+/ig, '').replaceAll(/([\x00-\x1F\x7F]|\s)+/ig, '');
-                        if (option==answer||option.includes(answer) || answer.includes(option)) {
+                        if (option == answer || option.includes(answer) || answer.includes(option)) {
                             hasAnswer = true
                             optionE.getElementsByTagName('input')[0].click();
-                            if (tmT == '0'&&option==answer) {//单选题，并且选项完全匹配，停止后续判断，防止嵌套问题
+                            if (tmT == '0' && option == answer) {//单选题，并且选项完全匹配，停止后续判断，防止嵌套问题
                                 break;
                             }
                         }
