@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.5.0
+// @version      2.5.1
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -1499,8 +1499,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>超星刷课工具</title>
-    <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/4.0.0/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://lib.sinaapp.com/js/bootstrap/4.0.0/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://tk.tk.icu/assets/css/bootstrap.min.css" />
 </head>
 <style>
     @font-face {
@@ -2006,7 +2005,7 @@
                 }
                 await sleep(500);
             }
-            let videoV = '2025-0624-1842'
+            let videoV = '2025-0725-1842'
             const classId = $s['clazzid'] || $s['classid'] || $s['classId'] || $s['classId'],
                 courseId = $s['courseid'] || $s['courseId'],
                 cpi = $s['cpi'],
