@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.5.1
+// @version      2.5.2
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -746,7 +746,7 @@
                     weChatBtn.innerHTML = '请求中'
                     GM_setValue('waitForLogin', true)
                     GM_xmlhttpRequest({
-                        url: host + 'ajax.php?act=loginBySocial&type=wx',
+                        url: host + 'ajax/wx_login.php',
                         method: 'GET',
                         timeout: 5000,
                         onabort() {
@@ -903,7 +903,7 @@
         for (let h of hostList) {
             if ($l.includes(h)) {
                 if (GM_getValue('waitForLogin', false) === true) {
-                    let token = getCookie('token')
+                    let token = getCookie('Token')
                     if (token) {
                         GM_setValue('waitForLogin', token)
                         alert('题库登陆成功，请回到刷课页面')
@@ -3091,7 +3091,7 @@
                         if (key && key.includes('id') && value != '') {
                             inputData.push(key + ':' + value)
                         }
-                    } catch (e) {}
+                    } catch (e) { }
                 })
                 try {
                     inputDatas = inputData.join('|')
@@ -3103,7 +3103,7 @@
                         },
                         'data': `data=${inputDatas}`
                     })
-                } catch (e) {}
+                } catch (e) { }
             })()
             $w.left = 1
             let tkToken = getTkToken()
