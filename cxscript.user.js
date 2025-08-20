@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.5.2
+// @version      2.5.3
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -2984,6 +2984,27 @@
                                             await sleep(30000);
                                         }
                                         break;
+                                    case 'microCourse':
+                                        if (!GM_getValue('doDocument', true)) {
+                                            logs.addLog('跳过任务：' + jobData.property.title, 'red');
+                                            break;
+                                        }
+                                        logs.addLog('开始速课任务：' + jobData.property.title);
+                                        await sleep(5000);
+                                        let domicroCoursResult = await request({
+                                            'url':'/ananas/job/microCourse?jobid=' + jobData.jobid +'&knowledgeid=' + chapterId + '&courseid=' + courseId + '&clazzid=' + classId + '&jtoken=' + jobData.jtoken+'&checkMicroTopic=true&microTopicId=undefined&jsoncallback=jQuery3710909116110402'+$n(1,9)+'_175567939'+$n(1,9)+'&_='+new Date()/1
+                                        })
+                                        if (!domicroCoursResult) {
+                                            logs.addLog('速课任务失败：' + jobData.property.title, 'red');
+                                            break;
+                                        }
+                                        if(domicroCoursResult.response.includes('添加考核点成功')){
+                                            logs.addLog('速课任务完成：' + jobData.property.title, 'green');
+                                        }else{
+                                            console.log(domicroCoursResult)
+                                            logs.addLog('速课任务失败：' + jobData.property.title, 'green');
+                                        }
+                                        break
                                     default:
                                         logs.addLog('暂不支持的任务类型：' + jobData.type);
                                 }
