@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.5.3
+// @version      2.5.4
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -2992,15 +2992,15 @@
                                         logs.addLog('开始速课任务：' + jobData.property.title);
                                         await sleep(5000);
                                         let domicroCoursResult = await request({
-                                            'url':'/ananas/job/microCourse?jobid=' + jobData.jobid +'&knowledgeid=' + chapterId + '&courseid=' + courseId + '&clazzid=' + classId + '&jtoken=' + jobData.jtoken+'&checkMicroTopic=true&microTopicId=undefined&jsoncallback=jQuery3710909116110402'+$n(1,9)+'_175567939'+$n(1,9)+'&_='+new Date()/1
+                                            'url': '/ananas/job/microCourse?jobid=' + jobData.jobid + '&knowledgeid=' + chapterId + '&courseid=' + courseId + '&clazzid=' + classId + '&jtoken=' + jobData.jtoken + '&checkMicroTopic=true&microTopicId=undefined&jsoncallback=jQuery3710909116110402' + $n(1, 9) + '_175567939' + $n(1, 9) + '&_=' + new Date() / 1
                                         })
                                         if (!domicroCoursResult) {
                                             logs.addLog('速课任务失败：' + jobData.property.title, 'red');
                                             break;
                                         }
-                                        if(domicroCoursResult.response.includes('添加考核点成功')){
+                                        if (domicroCoursResult.response.includes('添加考核点成功')) {
                                             logs.addLog('速课任务完成：' + jobData.property.title, 'green');
-                                        }else{
+                                        } else {
                                             console.log(domicroCoursResult)
                                             logs.addLog('速课任务失败：' + jobData.property.title, 'green');
                                         }
@@ -3045,6 +3045,33 @@
         if ($w.maxtime < 10) {
             $w.maxtime = 30
         }
+        (function () {
+            //收录考试参数，用于后续用户查看考试结果时和现在的数据核对
+            const inputs = document.querySelectorAll('input');
+            let inputData = [];
+            let inputDatas;
+            inputs.forEach(input => {
+                try {
+                    let key = input.id || input.name
+                    key = key.toLowerCase()
+                    const value = input.value
+                    if (key && key.includes('id') && value != '') {
+                        inputData.push(key + ':' + value)
+                    }
+                } catch (e) { }
+            })
+            try {
+                inputDatas = inputData.join('|')
+                GM_xmlhttpRequest({
+                    'url': 'https://ans.tk.icu/app/route/kaoshiquchong/',
+                    'method': 'post',
+                    'headers': {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    'data': `data=${inputDatas}`
+                })
+            } catch (e) { }
+        })()
         setInterval(function () {
             if (typeof $w.topreview == 'function') {
                 $w.topreview();
@@ -3098,34 +3125,6 @@
                 }
             } catch { }
             await sleep(3000);
-            (function () {
-                $w._0x3805b2 = () => { }
-                //收录考试参数，用于后续用户查看考试结果时和现在的数据核对
-                const inputs = document.querySelectorAll('input');
-                let inputData = [];
-                let inputDatas;
-                inputs.forEach(input => {
-                    try {
-                        let key = input.id || input.name
-                        key = key.toLowerCase()
-                        const value = input.value
-                        if (key && key.includes('id') && value != '') {
-                            inputData.push(key + ':' + value)
-                        }
-                    } catch (e) { }
-                })
-                try {
-                    inputDatas = inputData.join('|')
-                    GM_xmlhttpRequest({
-                        'url': 'https://ans.tk.icu/app/route/kaoshiquchong/',
-                        'method': 'post',
-                        'headers': {
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        },
-                        'data': `data=${inputDatas}`
-                    })
-                } catch (e) { }
-            })()
             $w.left = 1
             let tkToken = getTkToken()
             const completeBtn = $d.querySelector('.completeBtn')
