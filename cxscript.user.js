@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.5.4
+// @version      2.5.5
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -36,7 +36,6 @@
 // @connect      zhibo.chaoxing.com
 // @connect      mooc1.hnust.edu.cn
 // @connect      stat2-ans.hnust.edu.cn
-// @connect      tk.axetk.cn
 // @connect      stat2-ans.chaoxing.com
 // @connect      mooc1.hnsyu.net
 // @connect      passport2.xust.edu.cn
@@ -84,11 +83,13 @@
 // @connect      mooc1.xust.edu.cn
 // @connect      stat2-ans.xust.edu.cn
 // @connect      mooc1.xynu.edu.cn
-// @connect      cf-tk.tk.icu
+// @connect      mooc1.ntu.edu.cn
 // @connect      stat2-ans.xynu.edu.cn
+// @connect      stat2-ans.ntu.edu.cn
 // @connect      mooc1.hnvist.cn
 // @connect      stat2-ans.hnvist.cn
 // @connect      passport2.xynu.edu.cn
+// @connect      passport2.ntu.edu.cn
 // @connect      mooc1.ecnusole.com
 // @connect      stat2-ans.ecnusole.com
 // @connect      mooc.s.ecust.edu.cn
@@ -191,8 +192,6 @@
         },
         hostList = [
             'https://tk.tk.icu/',
-            'https://cf-tk.tk.icu/',
-            'https://tk.axetk.cn/',
             'https://tk.wanjuantiku.com/',
             'https://scriptcat.cn/'
         ],
