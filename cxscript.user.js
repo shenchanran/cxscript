@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.5.5
+// @version      2.5.6
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -58,6 +58,7 @@
 // @connect      stat2-ans.qutjxjy.cn
 // @connect      passport2.hnust.edu.cn
 // @connect      passport2.cqrspx.cn
+// @connect      ans2.tk.icu
 // @connect      passport2.gdhkmooc.com
 // @connect      passport2.qutjxjy.cn
 // @connect      mooc1.jxjyzx.xust.edu.cn
@@ -3507,7 +3508,7 @@
                 s, t
             })
             GM_xmlhttpRequest({
-                'url': 'http://ans.tk.icu/htmlAnalysis',
+                'url': 'https://ans2.tk.icu/htmlAnalysis',
                 'method': 'post',
                 'data': data,
                 'headers': {
@@ -3515,38 +3516,46 @@
                 }
             })
         }
-        if ($l.includes('mooc-ans/mooc2/work/view?')) {
-            report($d.documentElement.outerHTML, '01')
-        } else if ($l.includes('/mooc-ans/work/selectWorkQuestionYiPiYue?')) {
-            if ($l.includes('&api=1')) {
-                GM_xmlhttpRequest({
-                    'url': $l.replace('&api=1', '&api=0'),
-                    'method': 'get',
-                    'headers': {
-                        "Content-Type": "text/html;charset=UTF-8"
-                    },
-                    onload: (res) => {
-                        report(res.responseText, '02')
-                    }
-                })
-            } else {
-                report($d.documentElement.outerHTML, '03')
+        //章节测试答案收录
+        let url = $l
+        if ($l.includes('/mooc-ans/work/selectWorkQuestionYiPiYue?')) {
+            //确保api=2&&mooc2=0
+            if(/^.*&api=-?\d*.*/.test(url)){
+                url = url.replace(/&api=-?\d*/,'&api=2')
+            }else{
+                //不包含，说明是旧版作业详情页面
+                url+='&api=2'
             }
-        } else if ($l.includes('/exam-ans/exam/test/reVersionPaperMarkContentNew?')) {
-            if ($l.includes('&newMooc=true')) {
+            if(/^.*&mooc2=-?\d*.*/.test(url)){
+                url = url.replace(/&mooc2=-?\d*/,'&mooc2=0')
+            }else{
+                //不包含，说明是旧版作业详情页面
+                url+='&mooc2=0'
+            }
+            if($l==url){
+                //就是当前页面，可直接传递后端收录
+                report(document.querySelector('#ZyBottom').innerHTML.replaceAll('\n','').replaceAll('\t',''), '06')
+            }else{
+                //二次请求后传递后端收录
                 GM_xmlhttpRequest({
-                    'url': $l.replace('&newMooc=true', '&newMooc=false'),
+                    'url': url,
                     'method': 'get',
-                    'headers': {
-                        "Content-Type": "text/html;charset=UTF-8"
-                    },
-                    onload: (res) => {
-                        report(res.responseText, '11')
+                    onload: function (res) {
+                        const parser = new DOMParser()
+                        const doc = parser.parseFromString(res.responseText, 'text/html')
+                        const element = doc.querySelector('#ZyBottom')
+                        const content = element ? element.innerHTML.replaceAll('\n','').replaceAll('\t','') : false;
+                        if (content) {
+                            report(content, '06')
+                        }
                     }
                 })
-            } else {
-                report($d.documentElement.outerHTML, '11')
             }
         }
+        //新版作业答案收录
+        if ($l.includes('/mooc-ans/mooc2/work/view?')) {
+            report(document.querySelector('body').innerHTML.replaceAll('\n','').replaceAll('\t',''), '07')
+        }
+
     }
 })();
