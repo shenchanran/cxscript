@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.5.8
+// @version      2.5.9
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -2096,7 +2096,7 @@
                 };
             $d.getElementById('detail').innerHTML = detailResult.responseText;
             await sleep(1000);
-            let divs = [...$d.getElementsByClassName('posCatalog_select'), ...$d.querySelectorAll('h5'), ...$d.querySelectorAll('h4'), ...$d.querySelectorAll('h3'), ...$d.querySelectorAll('h2')]//适配部分学校自建服务器
+            let divs = [...$d.getElementsByClassName('menulist-menu-title'),...$d.getElementsByClassName('posCatalog_select'), ...$d.querySelectorAll('h5'), ...$d.querySelectorAll('h4'), ...$d.querySelectorAll('h3'), ...$d.querySelectorAll('h2')]//适配部分学校自建服务器
             for (let i = 0, l = divs.length; i < l; i++) {
                 if (!divs[i].id || !divs[i].id.includes('cur') || !divs[i].innerHTML) {//适配部分学校自建服务器，非任务点标签跳过
                     continue
