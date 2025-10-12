@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.5.9
+// @version      2.6.0
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -243,6 +243,16 @@
             return s
         },
         // 格式化字符串
+        beforeTrim = (s) => {
+            return handleImgs(s)
+                .replaceAll("-", '')
+                .replaceAll(/([\x00-\x1F\x7F]|\s){2,}/g, ' ')
+                .replaceAll(/<[^>]*>/g, '')
+                .replaceAll('javascript:void(0);', '')
+                .replaceAll(" ", '')
+                .replace(/^([\x00-\x1F\x7F]|\s)+/ig, '')
+                .replace(/([\x00-\x1F\x7F]|\s)+$/ig, '')
+        },
         trim = (s) => {
             return handleImgs(s)
                 .replaceAll("-", '')
@@ -2608,7 +2618,7 @@
                                                     for (let x = 0, j = answersElements.length; x < j; x++) {
                                                         let optionE = answersElements[x],
                                                             optionEm = optionE.querySelector('em'),
-                                                            optionTextE = trim(optionE.innerHTML.replace(/(^([\x00-\x1F\x7F]|\s)*)|(([\x00-\x1F\x7F]|\s)*$)/g, "")),
+                                                            optionTextE = beforeTrim(optionE.innerHTML.replace(/(^([\x00-\x1F\x7F]|\s)*)|(([\x00-\x1F\x7F]|\s)*$)/g, "")),
                                                             optionText = optionTextE.slice(1).replace(/(^([\x00-\x1F\x7F]|\s)*)|(([\x00-\x1F\x7F]|\s)*$)/g, ""),
                                                             optionValue = optionEm ? optionEm.getAttribute('id-param') : optionTextE.slice(0, 1);
                                                         if (optionText == '') {
@@ -2699,7 +2709,7 @@
                                                     xbp = false,
                                                     types;
                                                 for (let e in options) {
-                                                    optiont[trim(e).replaceAll(/([\x00-\x1F\x7F]|\s)*/g, '')] = options[e];
+                                                    optiont[beforeTrim(e).replaceAll(/([\x00-\x1F\x7F]|\s)*/g, '')] = options[e];
                                                 }
                                                 options = optiont;
                                                 if (type != '判断题' && optionsList.length == 2 && panduans.includes(optionsList[0]) && panduans.includes(optionsList[1])) {
@@ -2793,6 +2803,7 @@
                                                         if (o == 'length') {
                                                             continue;
                                                         }
+                                                        let oo = o
                                                         o = trim(o).replaceAll(/([\x00-\x1F\x7F]|\s)+/ig, '');
                                                         function fuckMe() {
                                                             for (let j = 0, a = optionLis.length; j < a; j++) {
@@ -2800,16 +2811,16 @@
                                                                 if (nowO.getAttribute('id-param') == questionid.replace('answer', '').replace('s', '')) {
                                                                     let nowEm = nowO.querySelector('em');
                                                                     if (nowEm) {
-                                                                        if (type == '判断题' && nowEm.innerHTML == options[o]) {
+                                                                        if (type == '判断题' && nowEm.innerHTML == options[oo]) {
                                                                             $p.getElementById(questionid).value = { 'A': 'true', 'B': 'false' }[options[o]];
                                                                             nowO.setAttribute('class', 'clearfix cur');
                                                                             hasAnswer = true;
-                                                                        } else if (nowEm.getAttribute('id-param') == options[o]) {
+                                                                        } else if (nowEm.getAttribute('id-param') == options[oo]) {
                                                                             if (type == '单选题') {
-                                                                                $p.getElementById(questionid).value = options[o];
+                                                                                $p.getElementById(questionid).value = options[oo];
                                                                             } else {
                                                                                 let ovalue = $p.getElementsByName(questionid)[0].value;
-                                                                                ovalue += options[o];
+                                                                                ovalue += options[oo];
                                                                                 $p.getElementsByName(questionid)[0].value = $ascii(ovalue);
                                                                             }
                                                                             nowO.setAttribute('class', 'clearfix cur');
@@ -3222,7 +3233,7 @@
                 let optionsElements = $d.getElementsByClassName('choice' + question['questionId']),
                     optionsList = [];
                 for (let optionE of optionsElements) {
-                    let option = trim(optionE.nextElementSibling.innerHTML);
+                    let option = beforeTrim(optionE.nextElementSibling.innerHTML);
                     optionsList.push(option);
                 }
                 let optionListJson = encodeURIComponent(JSON.stringify(optionsList)),
@@ -3405,7 +3416,7 @@
                                 zz[0].checked = '';
                             }
                             optionEs.push(optionsET);
-                            optionsList.push(trim(optionsET.innerHTML).replace(/^[A-Z]([\x00-\x1F\x7F]|\s)+/ig, ''))
+                            optionsList.push(beforeTrim(optionsET.innerHTML).replace(/^[A-Z]([\x00-\x1F\x7F]|\s)+/ig, ''))
                         }
                     }
                 }
