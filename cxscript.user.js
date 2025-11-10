@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.6.1
+// @version      2.6.2
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -47,6 +47,7 @@
 // @connect      mooc1.zut.edu.cn
 // @connect      passport2.hncj.edu.cn
 // @connect      stat2-ans.zut.edu.cn
+// @connect      scriptcat.org
 // @connect      passport2.jxjyzx.xust.edu.cn
 // @connect      passport2.zut.edu.cn
 // @connect      stat2-ans.wljx.hfut.edu.cn
@@ -357,7 +358,7 @@
                                 }
                             }
                             xhr.onerror = function () {
-                                alert('登录状态失效，请重新登陆超星\n反馈群：'+$qqgroup);
+                                alert('登录状态失效，请重新登陆超星\n反馈群：' + $qqgroup);
                                 $w.location.href = $protocol + $w.location.host.replace(/mooc(.*?)\./ig, 'passport2.') + '/login?fid=&newversion=true&refer=' + encodeURIComponent($l)
                             }
                             xhr.timeout = data.timeout
@@ -372,7 +373,7 @@
                                 xhr.send()
                             }
                         } else if (GM_info.scriptHandler == "Tampermonkey" && ['5.2.6195', '5.2.6196', '5.2.6197', '5.2.6198', '5.2.6199', '5.2.6200', '5.2.0'].includes(GM_info.version)) {
-                            if (confirm(`您正在使用的油猴插件版本为测试版：${GM_info.version}\n该版本存在未修复的问题，无法稳定的运行此脚本，请使用脚本猫\n点击确定前往脚本猫官网\n反馈群：`+$qqgroup)) {
+                            if (confirm(`您正在使用的油猴插件版本为测试版：${GM_info.version}\n该版本存在未修复的问题，无法稳定的运行此脚本，请使用脚本猫\n点击确定前往脚本猫官网\n反馈群：` + $qqgroup)) {
                                 $w.location.href = 'https://scriptcat.org/zh-CN/'
                             } else {
                                 success(false)
@@ -826,7 +827,7 @@
         return new Promise((success, fail) => {
             async function r(i, success) {
                 if (i >= hostList.length) {
-                    let z = confirm('【超星学习通九九助手】\n所有服务器均不可用，请稍后刷新重试或尝试更换网络\n请不要使用翻墙软件\n如果仍无法使用，请点击“取消”按钮自动前往更新脚本\nQQ反馈群：'+$qqgroup);
+                    let z = confirm('【超星学习通九九助手】\n所有服务器均不可用，请稍后刷新重试或尝试更换网络\n请不要使用翻墙软件\n如果仍无法使用，请点击“取消”按钮自动前往更新脚本\nQQ反馈群：' + $qqgroup);
                     if (!z) {
                         $w.top.location.href = 'http://f12.cx'
                     }
@@ -844,7 +845,7 @@
                         alert('【超星学习通九九助手】服务器暂停服务，请耐心等待恢复\n' + checkResult.info);
                         fail()
                     } else if (checkResult.status == 'u') {
-                        let l = confirm('【超星学习通九九助手】当前脚本有新版本，点击确定前往更新\n交流群：'+$qqgroup);
+                        let l = confirm('【超星学习通九九助手】当前脚本有新版本，点击确定前往更新\n交流群：' + $qqgroup);
                         if (l) {
                             $w.top.location.href = checkResult.url
                             fail()
@@ -859,7 +860,7 @@
             async function s(success) {
                 sTryTime += 1
                 if (sTryTime > 4) {
-                    alert('【超星学习通九九助手】token注册失败，请刷新页面重试\nQQ反馈群:'+$qqgroup)
+                    alert('【超星学习通九九助手】token注册失败，请刷新页面重试\nQQ反馈群:' + $qqgroup)
                     fail()
                 }
                 let token = getTkToken(),
@@ -1148,6 +1149,7 @@
                 
             </div>
             <div style="font-size: 16px;text-align: center;">该课程支持刷课，请选择您要刷的内容</div>
+            <div id="updateinfo" style="font-size: 16px;text-align: center;color: red;display: none;">脚本有新版本，<a href="https://scriptcat.org/zh-CN/script-show-page/1127" target="_blank">点我前往更新</a></div>
             <div style="margin-top: 20px;display: flex;justify-content: center;margin-bottom: 10px;">
                 <span
                     style="cursor: pointer; background-color: #68A4FF; color: white; padding: 2px 15px; line-height: 38px; height: 38px;margin-left: 10px; border: 1px solid #68A4FF;display: inline-block ;border-radius: 23px;margin-right: 10px;"
@@ -1192,6 +1194,36 @@
                 ctk(getTkToken())
             }, 800)
             setTimeout(() => {
+                try {
+                    GM_xmlhttpRequest({
+                        url: 'https://scriptcat.org/scripts/code/1127/%E8%B6%85%E6%98%9F%E5%AD%A6%E4%B9%A0%E9%80%9A%E4%B9%9D%E4%B9%9D%E5%8A%A9%E6%89%8B%5BAI%E7%AD%94%E9%A2%98%5D%5B%E4%B8%80%E9%94%AE%E5%90%AF%E5%8A%A8%5D%5B%E6%9C%80%E5%B0%8F%E5%8C%96%E8%BF%90%E8%A1%8C%5D.user.js',
+                        headers: {
+                            'dnt': '1',
+                            'referer': 'https://scriptcat.org/zh-CN/script-show-page/1127',
+                            'sec-ch-ua': '"Chromium";v="142", "Microsoft Edge";v="142", "Not_A Brand";v="99"',
+                            'sec-ch-ua-arch': '"x86"',
+                            'sec-ch-ua-bitness': '"64"',
+                            'sec-ch-ua-full-version': '"142.0.3595.65"',
+                            'sec-ch-ua-full-version-list': '"Chromium";v="142.0.7444.135", "Microsoft Edge";v="142.0.3595.65", "Not_A Brand";v="99.0.0.0"',
+                            'sec-ch-ua-mobile': '?0',
+                            'sec-ch-ua-model': '""',
+                            'sec-ch-ua-platform': '"Windows"',
+                            'sec-ch-ua-platform-version': '"10.0.0"',
+                            'upgrade-insecure-requests': '1'
+                        },
+                        method: 'GET',
+                        timeout: 5000,
+                        onload(res) {
+                            try {
+                                let result = res.responseText.match(/\/\/\s*@version\s*(\d{1}\.\d{1}\.\d{1})+\s+/)
+                                if (result[1] != GM_info.script.version) {
+                                    div.querySelector('#updateinfo').style.display = 'block'
+                                }
+                            } catch (e) {
+                            }
+                        }
+                    })
+                } catch (e) { }
                 let tkToken = getTkToken()
                 $d.querySelector("#token").value = tkToken
                 const pannel = $d.querySelector('#skpannel')
@@ -2106,7 +2138,7 @@
                 };
             $d.getElementById('detail').innerHTML = detailResult.responseText;
             await sleep(1000);
-            let divs = [...$d.getElementsByClassName('menulist-menu-title'),...$d.getElementsByClassName('posCatalog_select'), ...$d.querySelectorAll('h5'), ...$d.querySelectorAll('h4'), ...$d.querySelectorAll('h3'), ...$d.querySelectorAll('h2')]//适配部分学校自建服务器
+            let divs = [...$d.getElementsByClassName('menulist-menu-title'), ...$d.getElementsByClassName('posCatalog_select'), ...$d.querySelectorAll('h5'), ...$d.querySelectorAll('h4'), ...$d.querySelectorAll('h3'), ...$d.querySelectorAll('h2')]//适配部分学校自建服务器
             for (let i = 0, l = divs.length; i < l; i++) {
                 if (!divs[i].id || !divs[i].id.includes('cur') || !divs[i].innerHTML) {//适配部分学校自建服务器，非任务点标签跳过
                     continue
@@ -3532,22 +3564,22 @@
         let url = $l
         if ($l.includes('/mooc-ans/work/selectWorkQuestionYiPiYue?')) {
             //确保api=2&&mooc2=0
-            if(/^.*&api=-?\d*.*/.test(url)){
-                url = url.replace(/&api=-?\d*/,'&api=2')
-            }else{
+            if (/^.*&api=-?\d*.*/.test(url)) {
+                url = url.replace(/&api=-?\d*/, '&api=2')
+            } else {
                 //不包含，说明是旧版作业详情页面
-                url+='&api=2'
+                url += '&api=2'
             }
-            if(/^.*&mooc2=-?\d*.*/.test(url)){
-                url = url.replace(/&mooc2=-?\d*/,'&mooc2=0')
-            }else{
+            if (/^.*&mooc2=-?\d*.*/.test(url)) {
+                url = url.replace(/&mooc2=-?\d*/, '&mooc2=0')
+            } else {
                 //不包含，说明是旧版作业详情页面
-                url+='&mooc2=0'
+                url += '&mooc2=0'
             }
-            if($l==url){
+            if ($l == url) {
                 //就是当前页面，可直接传递后端收录
-                report(document.querySelector('#ZyBottom').innerHTML.replaceAll('\n','').replaceAll('\t',''), '06')
-            }else{
+                report(document.querySelector('#ZyBottom').innerHTML.replaceAll('\n', '').replaceAll('\t', ''), '06')
+            } else {
                 //二次请求后传递后端收录
                 GM_xmlhttpRequest({
                     'url': url,
@@ -3556,7 +3588,7 @@
                         const parser = new DOMParser()
                         const doc = parser.parseFromString(res.responseText, 'text/html')
                         const element = doc.querySelector('#ZyBottom')
-                        const content = element ? element.innerHTML.replaceAll('\n','').replaceAll('\t','') : false;
+                        const content = element ? element.innerHTML.replaceAll('\n', '').replaceAll('\t', '') : false;
                         if (content) {
                             report(content, '06')
                         }
@@ -3566,7 +3598,7 @@
         }
         //新版作业答案收录
         if ($l.includes('/mooc-ans/mooc2/work/view?')) {
-            report(document.querySelector('body').innerHTML.replaceAll('\n','').replaceAll('\t',''), '07')
+            report(document.querySelector('body').innerHTML.replaceAll('\n', '').replaceAll('\t', ''), '07')
         }
 
     }
