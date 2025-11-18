@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.6.3
+// @version      2.6.4
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -1329,211 +1329,7 @@
                     success();
                 }
             })
-        },
-            anhwudinai = function (courseid, classid, cpi) {
-                this.referer = false
-                this.conversation = {
-                    sending: false,
-                    error: false,
-                    list: []
-                }
-                this.readys = false
-                this.cozeEnc = false
-                this.botId = false
-                this.userId = false
-                this.appId = false
-                this.conversationId = false
-                this.ready = function (timeout = 3000) {
-                    if (this.readys) {
-                        return true
-                    }
-                    const url = 'https://mooc1.chaoxing.com/course-ans/ai/getStuAiWorkBench?courseId=' + courseid + '&clazzId=' + classid + '&cpi=' + cpi + '&ut=s&'
-                    return new Promise((a, _) => {
-                        GM_xmlhttpRequest({
-                            url,
-                            method: 'get',
-                            timeout,
-                            onload: (res) => {
-                                if (res.status != 200) {
-                                    a(false)
-                                } else {
-                                    const d = unsafeWindow.document.createElement('div')
-                                    d.innerHTML = res.responseText
-                                    const iframe = d.querySelector('.menuTab')
-                                    this.referer = iframe.getAttribute('hrefStr')
-                                    GM_xmlhttpRequest({
-                                        url: this.referer,
-                                        method: 'get',
-                                        timeout,
-                                        onload: (res) => {
-                                            if (res.status != 200) {
-                                                a(false)
-                                            } else {
-                                                const d = unsafeWindow.document.createElement('div')
-                                                d.innerHTML = res.responseText
-                                                this.cozeEnc = d.querySelector('#cozeEnc').value
-                                                this.botId = d.querySelector('#botId').value
-                                                this.userId = d.querySelector('#userId').value
-                                                this.appId = d.querySelector('#appId').value
-                                                this.conversationId = d.querySelector('#conversationId').value
-                                                this.readys = true
-                                                a(true)
-                                            }
-                                        },
-                                        onerror: function (e) {
-                                            console.log(e)
-                                            a(false)
-                                        },
-                                        onabort: function (e) {
-                                            console.log(e)
-                                            a(false)
-                                        },
-                                        ontimeout: function (e) {
-                                            console.log(e)
-                                            a(false)
-                                        },
-                                    })
-                                }
-                            },
-                            onerror: function (e) {
-                                console.log(e)
-                                a(false)
-                            },
-                            onabort: function (e) {
-                                console.log(e)
-                                a(false)
-                            },
-                            ontimeout: function (e) {
-                                console.log(e)
-                                a(false)
-                            }
-                        })
-                    })
-                }
-                this.send = function (type, tm, options = []) {
-                    let t = ['单选题', '多选题', false, '判断题']
-                    let o = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K']
-                    let tt = t[type]
-                    let content = `(${tt})${tm}\n`
-                    if (type != 3) {
-                        let option = ''
-                        for (let i in options) {
-                            if (options[i].includes('/')) {
-                                return false
-                            }
-                            option += `${o[i]}、${options[i]}\n`
-                        }
-                        content += option
-                    }
-                    content += "这道题选什么？"
-                    return new Promise((a, _) => {
-                        if (!this.readys) {
-                            a(false)
-                        }
-                        if (this.conversation.sending) {
-                            this.conversation.error = '上一条消息正在发送，请稍后'
-                            a(false)
-                        }
-                        this.conversation.sending = true
-                        this.conversation.list.push({
-                            "role": "user",
-                            "content": content,
-                            "baseData": {
-                                "conversationId": this.conversationId,
-                                "userId": this.userId,
-                                "appId": this.appId,
-                                "botId": this.botId
-                            }
-                        })
-                        let sentence = ''
-                        let msgId = '0'
-                        GM_xmlhttpRequest({
-                            method: 'POST',
-                            url: `https://stat2-ans.chaoxing.com/bot/talk?cozeEnc=${this.cozeEnc}&botId=${this.botId}&userId=${this.userId}&appId=${this.appId}&courseid=${courseid}&clazzid=${classid}`,
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Referer': this.referer
-                            },
-                            data: JSON.stringify(this.conversation.list),
-                            onload: (response) => {
-                                let word_ = response.responseText.replaceAll('data::server-heartbeat', '')
-                                let words = word_.split("\n\ndata:$_$")
-                                words.forEach(element => {
-                                    if (!element || element == '') {
-                                        return
-                                    }
-                                    element = element.replace(/\n\n$/)
-                                    try {
-                                        JSON.parse(element)
-                                    } catch {
-                                        return
-                                    }
-                                    let word_json = JSON.parse(element)
-                                    let word = word_json.content
-                                    if (typeof word_json.content !== 'undefined') {
-                                        msgId = word_json.id
-                                        sentence += word
-                                    }
-                                })
-                                this.conversation.list.push({
-                                    "id": Date.now(),
-                                    "role": "assistant",
-                                    "content": sentence,
-                                    "done": true,
-                                    "msgs": {},
-                                    "followUps": [],
-                                    "msgId": msgId,
-                                    "convertContent": `<p>${sentence}</p>`
-                                })
-                                this.conversation.sending = false
-                                let answer = false
-                                if (type != 3) {
-                                    answer = this.form(type, options, sentence)
-                                } else {
-                                    let a = sentence.indexOf('正确')
-                                    let b = sentence.indexOf('错误')
-                                    if (a === -1 && b === -1) {
-                                        answer = false
-                                    } else if (a !== -1 && b != -1) {
-                                        answer = a < b ? '正确' : '错误'
-                                    } else {
-                                        answer = a === -1 ? '错误' : '正确'
-                                    }
-                                }
-                                a(answer)
-                            },
-                            onerror: function (error) {
-                                this.conversation.sending = false
-                                console.error('请求失败:', error)
-                            }
-                        });
-                    })
-                }
-                this.form = function (type, options, str) {
-                    let result = false
-                    for (let i = 0; i < str.length; i++) {
-                        if (str[i] === '\n' || i > 30) {
-                            return result
-                        }
-                        // 检查是否是大写字母
-                        if (str[i] >= 'A' && str[i] <= 'Z') {
-                            const letterNum = str[i].charCodeAt(0) - 'A'.charCodeAt(0) + 1
-                            if (letterNum > options.length) {
-                                continue
-                            } else if (type == 0) {
-                                return options[letterNum - 1]
-                            } else {
-                                if (!result) {
-                                    result = ''
-                                }
-                                result += options[letterNum - 1] + '#'
-                            }
-
-                        }
-                    }
-                    return result
-                }
-            }
+        }
         async function main() {
             $d.querySelector('html').innerHTML = `
             <!DOCTYPE html>
@@ -1923,17 +1719,11 @@
             }
             AIbutton.onclick = function () {
                 if (!$w['AIwarning']) {
-                    $layer('<center><p>AI答题目前为测试功能</p><p>目前只支持章节测试的单选多选和判断题<p><p>不保证AI作答的成绩</p><p>只适用于补充题库没查到的题</p><p>建议关闭自动提交，作答完成后人工检查</p><p>脚本问题反馈群：<b>'+$qqgroup+'</b></p></center>');
+                    $layer('<center><p>AI答题目前为测试功能</p><p>目前只支持章节测试的AI答题<p><p>不保证AI作答的成绩</p><p>只适用于补充题库没查到的题</p><p>建议关闭自动提交，作答完成后人工检查</p><p>脚本问题反馈群：<b>' + $qqgroup + '</b></p></center>');
                     $w['AIwarning'] = true;
                 }
-                if ($w.left > 100) {
-                    let s = AIbutton.getAttribute('class').includes('light');
-                    GM_setValue('doAI', (() => { return s && ((() => { AIbutton.setAttribute('class', 'btn btn-primary'); $w.logs.addLog('AI答题已开启', 'green'); return true; })()) || ((() => { AIbutton.setAttribute('class', 'btn btn-light'); $w.logs.addLog('AI答题已关闭', 'red'); return false; })()) })());
-                } else {
-                    GM_setValue('doAI', 0)
-                    AIbutton.setAttribute('class', 'btn btn-light')
-                    $w.logs.addLog('为防止正确率过低，剩余答题次数过低时禁用AI答题', 'red');
-                }
+                let s = AIbutton.getAttribute('class').includes('light');
+                GM_setValue('doAI', (() => { return s && ((() => { AIbutton.setAttribute('class', 'btn btn-primary'); $w.logs.addLog('AI答题已开启', 'green'); return true; })()) || ((() => { AIbutton.setAttribute('class', 'btn btn-light'); $w.logs.addLog('AI答题已关闭', 'red'); return false; })()) })());
             }
             autoSubmitButton.onclick = function () {
                 if ($w.chuangguan) {
@@ -2713,17 +2503,6 @@
                                             break;
                                         }
                                         logs.addLog('开始做章节测试：' + jobData.property.title);
-                                        let enadblAI = false
-                                        let AI = false
-                                        if (GM_getValue('doAI', false) && anhwudinai) {
-                                            try {
-                                                AI = new anhwudinai(courseId, classId, cpi)
-                                                AI.ready()
-                                                enadblAI = true
-                                            } catch (e) {
-                                                console.log(e)
-                                            }
-                                        }
                                         let sleeptime = $n(2, 4);
                                         for (let i = 0, l = questionList.length; i < l; i++) {
                                             try {
@@ -2757,6 +2536,10 @@
                                                         '判断题': '3'
                                                     }[type]
                                                 }
+                                                let ai = '0'
+                                                if (GM_getValue('doAI', false)) {
+                                                    ai = '1'
+                                                }
                                                 let answernum = inputs.length || '',
                                                     questionid = questionArray.questionid,
                                                     tkReady = false,
@@ -2766,7 +2549,7 @@
                                                         headers: {
                                                             "Content-Type": "application/x-www-form-urlencoded"
                                                         },
-                                                        data: 'tm=' + encodeURIComponent(decodeHtmlEntities(tm).replace(/(^([\x00-\x1F\x7F]|\s)*)|(([\x00-\x1F\x7F]|\s)*$)/g, '')) + '&type=' + types + '&wid=' + wid + '&answernum=' + answernum + '&cid=' + courseId + '&options=' + optionsJsonText,
+                                                        data: 'tm=' + encodeURIComponent(decodeHtmlEntities(tm).replace(/(^([\x00-\x1F\x7F]|\s)*)|(([\x00-\x1F\x7F]|\s)*$)/g, '')) + '&type=' + types + '&wid=' + wid + '&answernum=' + answernum + '&cid=' + courseId + '&options=' + optionsJsonText + '&ai=' + ai + '&coursename=' + $s['coursename'],
                                                         url: host + 'api/query?token=' + (getTkToken()) + '&version=' + $version,
                                                         "timeout": 2e4
                                                     });
@@ -2780,22 +2563,8 @@
                                                     tkLeft(tkResultJson.left, getTkToken());
                                                     if (tkResultJson.code != 1) {
                                                         if (tkResultJson.msg) {
-                                                            logs.addLog('题库错误：' + tkResultJson.msg, 'red');
-                                                            if ($w.left > 100 && GM_getValue('doAI', false) && enadblAI && AI.readys) {
-                                                                try {
-                                                                    tkReady = await AI.send(types, tm, optionsList)
-                                                                    if (!tkReady) {
-                                                                        logs.addLog('AI也没找到', 'red');
-                                                                        continue;
-                                                                    }
-                                                                } catch (e) {
-                                                                    console.log(e)
-                                                                    logs.addLog('AI答题出现未知错误', 'red');
-                                                                    continue
-                                                                }
-                                                            } else {
-                                                                continue
-                                                            }
+                                                            logs.addLog('查题失败：' + tkResultJson.msg, 'red');
+                                                            continue
                                                         }
                                                     } else if (tkResultJson.data) {
                                                         tkReady = tkResultJson.data;
@@ -2829,7 +2598,11 @@
                                                         tkRightAnswer = '错';
                                                     }
                                                 }
-                                                logs.addLog(tm + '：' + tkRightAnswer);
+                                                let answerMsg = tm + '：' + tkRightAnswer
+                                                if (tkResultJson.msg == 'ai') {
+                                                    answerMsg = '[AI] ' + answerMsg
+                                                }
+                                                logs.addLog(answerMsg);
                                                 let hasAnswer = false;
                                                 if (type != '填空题') {
                                                     for (let o in options) {
