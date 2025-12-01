@@ -1,3 +1,4 @@
+42
 // ==UserScript==
 // @name         超星学习通九九助手[AI答题][一键启动][最小化运行]
 // @name:zh-TW   超星學習通九九助手[AI答題][一鍵啟動][最小化運行]
@@ -9,7 +10,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.6.4
+// @version      2.6.5
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -97,7 +98,7 @@
 // @connect      mooc.s.ecust.edu.cn
 // @connect      webvpn.ahmu.edu.cn
 // @connect      127.0.0.1
-// @license      MIT
+// @license      二开需获得原作者授权
 // @compatible firefox
 // @compatible chrome
 // @compatible edge
@@ -105,7 +106,7 @@
 // @downloadURL https://greasyfork.cn/scripts/cxscript.user.js
 // @updateURL https://greasyfork.cn/scripts/cxscript.meta.js
 // ==/UserScript==
-!!(function () {
+!!(async function () {
     const
         //---------------------------------------------------------------------------
         是否启用后台服务器 = '0',//改为1则启用后台服务器，请先学习使用方法：https://bbs.tampermonkey.net.cn/thread-5249-1-1.html
@@ -120,7 +121,491 @@
     // ----------
     // 别看了，屎山
     // ----------
-    let $qqgroup = '1051811266',
+    class PopupTool {
+
+        constructor(config = {}) {
+
+            /* ------------------ 可配置属性（带默认值） ------------------ */
+            this.POPUP_WIDTH = config.POPUP_WIDTH || 500;
+            this.HEADER_HEIGHT = config.HEADER_HEIGHT || 30;
+            this.MIN_HEADER_VISIBLE_RATIO = config.MIN_HEADER_VISIBLE_RATIO || 0.5;
+            this.LS_KEY = config.LS_KEY || "99toolset";
+            this.POPUP_NAME = config.POPUP_NAME || "超星学习通九九助手";
+            this.tokenR = setTimeout(() => { }, 100)
+
+            /* 日志缓存（内部使用）*/
+            this._logs = [];
+
+            /* 初始化界面 */
+            this.init();
+        }
+
+        /* ------------------ 工具方法 ------------------ */
+        clamp(v, min, max) { return Math.min(Math.max(v, min), max); }
+
+        loadState() {
+            try { return JSON.parse(GM_getValue(this.LS_KEY, false)) || {}; }
+            catch { return {}; }
+        }
+
+        saveState(obj) {
+            GM_setValue(this.LS_KEY, JSON.stringify(obj));
+        }
+
+        /* ===================================================================
+           初始化界面 —— 原闭包内容全部重写成对象内部 this.xxx
+           =================================================================== */
+        init() {
+
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+
+            /* DOM 元素 */
+            this.popup = document.createElement("div");
+            this.header = document.createElement("div");
+            this.minimizeBtn = document.createElement("button");
+            this.content = document.createElement("div");
+
+            this.row1 = document.createElement("div");
+            this.tokenInput = document.createElement("input");
+            this.saveBtn = document.createElement("button");
+            this.AIBtn = document.createElement("button");
+            this.restCount = document.createElement("span");
+
+            this.row2 = document.createElement("div");
+            this.baseInfo = document.createElement("div");
+
+            this.row3 = document.createElement("div");
+            this.splitter = document.createElement("div");
+            this.logBox = document.createElement("div");
+
+            /* 默认坐标 */
+            const defaultLeft = winW - this.POPUP_WIDTH - 20;
+            const defaultTop = (winH * 0.8 - winH * 0.2) / 2;
+
+            const state = this.loadState();
+            this.minimized = false;
+            let popupLeft = defaultLeft;
+            let popupTop = defaultTop;
+
+            if (state.winW === winW && state.winH === winH) {
+                if (typeof state.left === "number") popupLeft = state.left;
+                if (typeof state.top === "number") popupTop = state.top;
+                this.minimized = !!state.minimized;
+            }
+
+            /* ------------------ 弹窗布局 ------------------ */
+            this.popup.style.cssText = `
+            position: fixed;
+            left: ${popupLeft}px;
+            top: ${popupTop}px;
+            width: ${this.POPUP_WIDTH}px;
+
+            height: ${Math.max(winH * 0.35, this.HEADER_HEIGHT + 100)}px;
+
+            background:#fff;
+            border-radius:10px;
+            border:1px solid #e5e7eb;
+            display:flex;
+            flex-direction:column;
+            overflow:hidden;
+            resize: vertical;
+            z-index:999999;
+            box-shadow:0 6px 18px rgba(0,0,0,.15);
+        `;
+
+            /* ------------------ 标题栏 ------------------ */
+            this.header.style.cssText = `
+            background:#fff;
+            padding:0 10px;
+            height:${this.HEADER_HEIGHT}px;
+            line-height:${this.HEADER_HEIGHT}px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            border-bottom:1px solid #e5e7eb;
+            cursor:move;
+            user-select:none;
+            font-size:14px;
+            font-weight:600;
+        `;
+            this.header.textContent = this.POPUP_NAME;
+
+            this.minimizeBtn.textContent = this.minimized ? "▶" : "⏸";
+            this.minimizeBtn.style.cssText = `
+            background:transparent;
+            border:none;
+            font-size:14px;
+            width:24px;height:20px;
+            cursor:pointer;
+            border-radius:4px;
+        `;
+            this.minimizeBtn.onmouseover = () => this.minimizeBtn.style.background = "#eee";
+            this.minimizeBtn.onmouseout = () => this.minimizeBtn.style.background = "transparent";
+            this.header.appendChild(this.minimizeBtn);
+
+            /* ------------------ 主体 ------------------ */
+            this.content.style.cssText = `
+            flex:1;
+            display:flex;
+            flex-direction:column;
+            min-height:0;
+            overflow:hidden;
+            background:#fafafa;
+        `;
+
+            /* row1 */
+            this.row1.style.cssText = `padding:8px;display:flex;gap:8px;align-items:center;font-size:14px;`;
+            this.tokenInput.style.cssText = `
+            width:100%;
+            padding:6px 32px 6px 8px;  /* 右侧留位置给图标 */
+            border:1px solid #ccc;
+            border-radius:6px;
+            box-sizing:border-box;
+            font-size:14px;
+        `;
+            this.tokenInput.type = "password";
+            this.tokenWrap = document.createElement("div");
+            this.tokenWrap.style.cssText = `
+            position: relative;
+            flex: 1;
+            display: flex;
+        `;
+            this.tokenWrap.appendChild(this.tokenInput);
+            this.saveBtn.textContent = "保存";
+            this.saveBtn.style.cssText = `padding:6px 12px;background:#1f76ff;color:#fff;border:none;border-radius:6px;cursor:pointer;`;
+            this.AIBtn.textContent = "AI答题";
+            this.AIBtn.style.cssText = `padding:6px 12px;background:gray;color:#fff;border:none;border-radius:6px;cursor:pointer;`;
+            if (GM_getValue('aiAnswer', false)) {
+                this.AIBtn.style.background = '#1f76ff'
+            }
+            this.restCount.textContent = "剩余次数：--";
+            this.eyeBtn = document.createElement("div");
+            this.eyeBtn.style.cssText = `
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            opacity: 0.6;
+        `;
+            this.eyeBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/>
+        <circle cx="12" cy="12" r="3"/>
+        </svg>
+        `;
+
+            this.eyeBtn.onmouseover = () => this.eyeBtn.style.opacity = "1";
+            this.eyeBtn.onmouseout = () => this.eyeBtn.style.opacity = "0.6";
+
+            this.tokenWrap.appendChild(this.eyeBtn);
+            this.eyeBtn.addEventListener("mousedown", () => {
+                this.tokenInput.type = "text";
+            });
+            this.eyeBtn.addEventListener("mouseup", () => {
+                this.tokenInput.type = "password";
+            });
+            this.eyeBtn.addEventListener("mouseleave", () => {
+                this.tokenInput.type = "password";
+            });
+            this.row1.append(this.tokenWrap, this.saveBtn, this.AIBtn, this.restCount);
+
+            /* row2 */
+            this.row2.style.cssText = `padding:8px;background:#fff;border-top:1px solid #e5e7eb;font-size:14px;`;
+            this.baseInfo.textContent = "内容加载中";
+            this.row2.appendChild(this.baseInfo);
+
+            /* row3 + split + logBox */
+            this.row3.style.cssText = `
+            flex:1;
+            display:flex;
+            flex-direction:column;
+            min-height:0;
+            overflow:hidden;
+            background:#fff;
+            border-top:1px solid #e5e7eb;
+        `;
+            this.splitter.style.cssText = `height:4px;background:#f3f4f6;cursor:row-resize;`;
+            this.logBox.style.cssText = `
+            flex:1;
+            min-height:0;
+            overflow-y:auto;
+            padding:8px;
+            font-size:14px;        /* ★ 从 12 改为 14 */
+            line-height:1.5;
+            background:#fff;
+            white-space:pre-wrap;
+            word-wrap:break-word;
+            overflow-wrap:break-word;
+        `;
+            this.logBox.textContent = "日志输出：\n";
+
+            this.row3.append(this.splitter, this.logBox);
+            this.content.append(this.row1, this.row2, this.row3);
+
+            this.popup.append(this.header, this.content);
+            document.body.appendChild(this.popup);
+
+            /* 拖动、最小化、高度调整逻辑 */
+            this.bindEvents();
+
+            /* 恢复最小化状态 */
+            this.applyMinimize();
+        }
+
+        /* ===================================================================
+           行为绑定（拖动、分割条、最小化、位置保持）
+           =================================================================== */
+        bindEvents() {
+            const popup = this.popup;
+
+            /* ------------------ 拖动 ------------------ */
+            let isDragging = false, offsetX = 0, offsetY = 0;
+
+            this.header.addEventListener("mousedown", (e) => {
+                isDragging = true;
+                offsetX = e.clientX - popup.offsetLeft;
+                offsetY = e.clientY - popup.offsetTop;
+            });
+            window.addEventListener("mouseup", () => {
+                if (!isDragging) return;
+                isDragging = false;
+                this.saveState({
+                    left: popup.offsetLeft,
+                    top: popup.offsetTop,
+                    minimized: this.minimized,
+                    winW: window.innerWidth,
+                    winH: window.innerHeight
+                });
+            });
+            window.addEventListener("mousemove", (e) => {
+                if (!isDragging) return;
+
+                let left = e.clientX - offsetX;
+                let top = e.clientY - offsetY;
+
+                const vw = window.innerWidth;
+                const vh = window.innerHeight;
+
+                const minVisible = this.POPUP_WIDTH * this.MIN_HEADER_VISIBLE_RATIO;
+                const minLeft = -(this.POPUP_WIDTH - minVisible);
+                const maxLeft = vw - minVisible;
+
+                left = this.clamp(left, minLeft, maxLeft);
+                top = this.clamp(top, 0, vh - this.HEADER_HEIGHT);
+
+                popup.style.left = left + "px";
+                popup.style.top = top + "px";
+            });
+
+            /* ------------------ 分割条拖高度 ------------------ */
+            let draggingSplit = false;
+            this.splitter.addEventListener("mousedown", () => draggingSplit = true);
+            window.addEventListener("mouseup", () => draggingSplit = false);
+
+            window.addEventListener("mousemove", (e) => {
+                if (!draggingSplit) return;
+                if (this.minimized) return;
+
+                let newHeight = popup.offsetHeight + e.movementY;
+                if (newHeight < this.HEADER_HEIGHT) newHeight = this.HEADER_HEIGHT;
+
+                popup.style.height = newHeight + "px";
+            });
+
+            /* ------------------ 最小化 ------------------ */
+            this.minimizeBtn.onclick = () => {
+                this.minimized = !this.minimized;
+                this.applyMinimize();
+            };
+
+            /* ------------------ 保持标题栏可见 ------------------ */
+            setInterval(() => {
+                const vw = window.innerWidth, vh = window.innerHeight;
+
+                popup.style.left = this.clamp(
+                    popup.offsetLeft,
+                    -(this.POPUP_WIDTH - this.POPUP_WIDTH * this.MIN_HEADER_VISIBLE_RATIO),
+                    vw - this.POPUP_WIDTH * this.MIN_HEADER_VISIBLE_RATIO
+                ) + "px";
+
+                popup.style.top = this.clamp(
+                    popup.offsetTop, 0, vh - this.HEADER_HEIGHT
+                ) + "px";
+
+            }, 120);
+
+            /* ------------------ 保存按钮（写入日志） ------------------ */
+            this.saveBtn.onclick = () => {
+                this.addLog(`Token 保存：${this.tokenInput.value || "(空)"}`);
+            };
+
+            this.AIBtn.onclick = () => {
+                let aiAnswer = GM_getValue('aiAnswer', false)
+                if (aiAnswer) {
+                    this.AIBtn.style.background = 'gray'
+                    this.addLog('已关闭AI答题')
+                    GM_setValue('aiAnswer', false)
+                } else {
+                    this.AIBtn.style.background = '#1f76ff'
+                    this.addLog('<span style="color:green;">已开启AI答题</span>')
+                    GM_setValue('aiAnswer', true)
+                }
+            };
+        }
+
+        /* ===================================================================
+           最小化处理
+           =================================================================== */
+        applyMinimize() {
+            if (this.minimized) {
+                this.content.style.display = "none";
+                this.popup.style.height = this.HEADER_HEIGHT + "px";
+                this.popup.style.resize = "none";
+                this.minimizeBtn.textContent = "▶";
+                this.minimizeBtn.title = "恢复";
+            } else {
+                this.content.style.display = "flex";
+                this.popup.style.height = Math.max(window.innerHeight * 0.35, this.HEADER_HEIGHT + 100) + "px";
+                this.popup.style.resize = "vertical";
+                this.minimizeBtn.textContent = "⏸";
+                this.minimizeBtn.title = "暂停并最小化";
+            }
+
+            this.saveState({
+                left: this.popup.offsetLeft,
+                top: this.popup.offsetTop,
+                minimized: this.minimized,
+                winW: window.innerWidth,
+                winH: window.innerHeight
+            });
+        }
+
+        /* ===================================================================
+           日志操作方法（你要求的3个）
+           =================================================================== */
+
+        /* ✔ 添加一条日志：自动加时间前缀 */
+        addLog(str) {
+            const now = new Date();
+            const t = `[${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}:${now.getSeconds().toString().padStart(2, "0")}] `;
+
+            const finalLine = t + str;
+
+            // 内部缓存追加
+            this._logs.push(finalLine);
+
+            // ★ 使用 innerHTML 支持富文本
+            this.logBox.innerHTML += finalLine + "<br>";
+
+            // 滚动到底部
+            this.logBox.scrollTop = this.logBox.scrollHeight;
+        }
+
+        /* ✔ 批量载入日志（不清空原有日志，直接追加） */
+        loadLogs(arr) {
+            if (!Array.isArray(arr)) return;
+
+            for (const line of arr) {
+                this._logs.push(line);
+                this.logBox.innerHTML += line + "<br>";
+            }
+
+            this.logBox.scrollTop = this.logBox.scrollHeight;
+        }
+
+        /* ✔ 导出当前日志为一维字符串数组 */
+        exportLogs() {
+            return this._logs.slice();
+        }
+
+        /* 自定义信息栏内容 */
+        setBaseInfo(htmlString) {
+            this.baseInfo.innerHTML = htmlString;
+        }
+
+        /* ✔ 设置剩余次数 */
+        setRestCount(n) {
+            this.restCount.textContent = "剩余次数：" + n;
+        }
+
+        /* ✔ 设置 Token（并记录为旧值） */
+        setToken(token) {
+            this._lastValidToken = token;   // 保存合法 token
+            this.tokenInput.value = token;
+        }
+
+        /* 
+        ✔ 设置 Token 验证与保存逻辑
+        validator(token) → true/false
+        onSave(token) → 用户点击保存且验证通过后执行
+        */
+        setTokenHandler(validator = (token) => {
+            const reg = /^[0-9a-z]{32}$/ig
+            return reg.test(token)
+        }, onSave = function (token) {
+            GM_setValue('shenchanranToken', token)
+            ctk(token)
+            clearInterval(this.tokenR)
+            this.tokenR = setInterval(() => {
+                this.setRestCount($w.left)
+            }, 500)
+        }) {
+
+            this._validator = validator;
+            this._onSave = onSave;
+
+            // 输入框监听：实时验证
+            this.tokenInput.addEventListener("input", () => {
+                const value = this.tokenInput.value;
+
+                const ok = this._validator(value);
+                this._tokenIsValid = ok;    // 保存验证状态
+
+                // 你可以在这里扩展输入实时提示
+            });
+
+            // 保存按钮点击逻辑（覆盖原有 onclick）
+            this.saveBtn.onclick = () => {
+
+                const value = this.tokenInput.value;
+
+                if (this._tokenIsValid) {
+                    // 通过验证 —— 正常保存
+                    this._lastValidToken = value;
+
+                    // 调用外部保存回调
+                    this._onSave(value);
+
+                    // 写入日志
+                    this.addLog("Token 保存成功。");
+
+                } else {
+
+                    // 验证失败 —— 恢复旧 token
+                    if (this._lastValidToken !== undefined) {
+                        this.tokenInput.value = this._lastValidToken;
+                    }
+
+                    // 显示红色错误提示
+                    this.setBaseInfo(`
+                <span style="color:red;font-weight:bold;">
+                    token格式不符，已为您还原上一个token
+                </span>
+            `);
+
+                    // 写入日志
+                    this.addLog("<span style='color:red'>Token 保存失败（格式不符）</span>");
+                }
+            };
+        }
+
+    }
+    let pass = true,
+        $qqgroup = '1051811266',
         $w = unsafeWindow,
         $l = $w.location.href,
         $d = $w.document,
@@ -822,78 +1307,84 @@
                     modal.style.display = 'none';
                 })
             })
-        }
-    hostCheck = () => {
-        return new Promise((success, fail) => {
-            async function r(i, success) {
-                if (i >= hostList.length) {
-                    let z = confirm('【超星学习通九九助手】\n所有服务器均不可用，请稍后刷新重试或尝试更换网络\n请不要使用翻墙软件\n如果仍无法使用，请点击“取消”按钮自动前往更新脚本\nQQ反馈群：' + $qqgroup);
-                    if (!z) {
-                        $w.top.location.href = 'http://f12.cx'
-                    }
-                    fail()
-                    return
-                }
-                await brequest({ "url": hostList[i] + 'api/status?version=' + $version, timeout: 3e3 }).then((checkResult) => {
-                    if (!checkResult) {
-                        i++
-                        r(i, success)
-                    } else if (checkResult.status == 't') {
-                        host = hostList[i]
-                        s(success)
-                    } else if (checkResult.status == 'f') {
-                        alert('【超星学习通九九助手】服务器暂停服务，请耐心等待恢复\n' + checkResult.info);
-                        fail()
-                    } else if (checkResult.status == 'u') {
-                        let l = confirm('【超星学习通九九助手】当前脚本有新版本，点击确定前往更新\n交流群：' + $qqgroup);
-                        if (l) {
-                            $w.top.location.href = checkResult.url
-                            fail()
-                            return
+        },
+        hostCheck = () => {
+            return new Promise((success, fail) => {
+                let shost
+                async function r(i, success) {
+                    if (i >= hostList.length) {
+                        let z = confirm('【超星学习通九九助手】\n所有服务器均不可用，请稍后刷新重试或尝试更换网络\n请不要使用翻墙软件\n如果仍无法使用，请点击“取消”按钮自动前往更新脚本\nQQ反馈群：' + $qqgroup);
+                        if (!z) {
+                            $w.top.location.href = 'http://f12.cx'
                         }
-                        host = hostList[i]
-                        s(success)
+                        fail()
+                        return
                     }
-                })
-            }
-            let sTryTime = 0
-            async function s(success) {
-                sTryTime += 1
-                if (sTryTime > 4) {
-                    alert('【超星学习通九九助手】token注册失败，请刷新页面重试\nQQ反馈群:' + $qqgroup)
-                    fail()
-                }
-                let token = getTkToken(),
-                    reg = /^[0-9a-z]{32}$/ig;
-                //如果获取了旧版token或者哪里都无法获取，就重新生成一个
-                if (['66666666666666666666666666666666', '', null, undefined, false].includes(token) || !reg.test(token)) {
-                    // let tempToken = randomString(true)
-                    let tempTokens = await tokenGetter()
-                    let tempToken = tempTokens[1]
-                    if (tempTokens[0]) {//为true代表随机生成，需要注册后使用
-                        register(tempToken).then((result) => {
-                            if (!result || result.code != 1) {
-                                setTimeout(() => {
-                                    s(success)
-                                }, 500)
+                    await brequest({ "url": hostList[i] + 'api/status?version=' + $version, timeout: 3e3 }).then((checkResult) => {
+                        if (!checkResult) {
+                            i++
+                            r(i, success)
+                        } else if (checkResult.status == 't') {
+                            host = hostList[i]
+                            shost = host
+                            s(success)
+                        } else if (checkResult.status == 'f') {
+                            alert('【超星学习通九九助手】服务器暂停服务，请耐心等待恢复\n' + checkResult.info);
+                            fail()
+                        } else if (checkResult.status == 'u') {
+                            let l = confirm('【超星学习通九九助手】当前脚本有新版本，点击确定前往更新\n交流群：' + $qqgroup);
+                            if (l) {
+                                $w.top.location.href = checkResult.url
+                                fail()
+                                return
                             }
+                            host = hostList[i]
+                            shost = host
+                            s(success)
+                        }
+                    })
+                }
+                let sTryTime = 0
+                async function s(success) {
+                    sTryTime += 1
+                    if (sTryTime > 4) {
+                        alert('【超星学习通九九助手】token注册失败，请刷新页面重试\nQQ反馈群:' + $qqgroup)
+                        fail()
+                    }
+                    let token = getTkToken(),
+                        reg = /^[0-9a-z]{32}$/ig;
+                    //如果获取了旧版token或者哪里都无法获取，就重新生成一个
+                    if (['66666666666666666666666666666666', '', null, undefined, false].includes(token) || !reg.test(token)) {
+                        // let tempToken = randomString(true)
+                        let tempTokens = await tokenGetter()
+                        let tempToken = tempTokens[1]
+                        if (tempTokens[0]) {//为true代表随机生成，需要注册后使用
+                            register(tempToken).then((result) => {
+                                if (!result || result.code != 1) {
+                                    setTimeout(() => {
+                                        s(success)
+                                    }, 500)
+                                }
+                                token = tempToken
+                                $w.localStorage.removeItem('shenchanranToken')
+                                GM_setValue('shenchanranToken', token)
+                                success(shost)
+                            })
+                        } else {
                             token = tempToken
                             $w.localStorage.removeItem('shenchanranToken')
                             GM_setValue('shenchanranToken', token)
-                            success()
-                        })
+                            success(shost)
+                        }
                     } else {
-                        token = tempToken
-                        $w.localStorage.removeItem('shenchanranToken')
-                        GM_setValue('shenchanranToken', token)
-                        success()
+                        success(shost)
                     }
-                } else {
-                    success()
                 }
-            }
-            r(0, success)
-        })
+                r(0, success)
+            })
+        }
+    if (checkDuoKai()) {
+        return;
     }
     // 监听此页面，判断用户是否需要刷学习次数，如果需要，就点进章节
     if ($l.includes('mycourse/studentcourse?')) {
@@ -1029,9 +1520,6 @@
     }
     // 章节主页，在此页面显示导航弹窗
     if ($l.includes('/mycourse/stu?') || ($l.includes('mycourse/studentcourse?') && $w.top == $w)) {
-        if (checkDuoKai()) {
-            return;
-        }
         let newVersion = true
         if ($l.includes('mycourse/studentcourse?')) {
             if (GM_getValue('directToWork', false)) {
@@ -1312,9 +1800,6 @@
     }
     // 刷章节页面
     else if ($l.includes('.html?ut=s&classid') && $l.includes('/mooc-ans/course/') && !$l.includes('passport2')) {
-        if (checkDuoKai()) {
-            return;
-        }
         $w.wait = false;
         // 某些脚本在某些脚本插件运行时会导致此脚本版本号异常
         if (!$version || $version == '' || $version == undefined) {
@@ -2844,18 +3329,12 @@
     }
     // 考试前等待页面
     else if ($l.includes('examcode/examnotes') || $l.includes('exam-ans/exam/test?')) {
-        if (checkDuoKai()) {
-            return;
-        }
         if (GM_getValue('tkLeft', 0) < 100) {
             alert('【超星学习通九九助手】\n题库剩余次数过少，可能会导致考试过程中答题中断，请注意');
         }
     }
     // 考试作答页面,旧版页面自动跳转到新版,新版页面自动跳转到整卷预览页面
     else if ($l.includes('reVersionTestStartNew')) {
-        if (checkDuoKai()) {
-            return;
-        }
         if ($s['newMooc'] != 'true') {
             $w.location.href = $l + '&newMooc=true';
             return;
@@ -2863,45 +3342,9 @@
         if ($w.maxtime < 10) {
             $w.maxtime = 30
         }
-        (function () {
-            //收录考试参数，用于后续用户查看考试结果时和现在的数据核对
-            const inputs = document.querySelectorAll('input');
-            let inputData = [];
-            let inputDatas;
-            inputs.forEach(input => {
-                try {
-                    let key = input.id || input.name
-                    key = key.toLowerCase()
-                    const value = input.value
-                    if (key && key.includes('id') && value != '') {
-                        inputData.push(key + ':' + value)
-                    }
-                } catch (e) { }
-            })
-            try {
-                inputDatas = inputData.join('|')
-                GM_xmlhttpRequest({
-                    'url': 'https://ans.tk.icu/app/route/kaoshiquchong/',
-                    'method': 'post',
-                    'headers': {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    'data': `data=${inputDatas}`
-                })
-            } catch (e) { }
-        })()
-        setInterval(function () {
-            if (typeof $w.topreview == 'function') {
-                $w.topreview();
-            }
-        }, $n(3));
-        return;
     }
     // 整卷预览页面,在此页面作答
     else if ($l.includes('ans/mooc2/exam/preview')) {
-        if (checkDuoKai()) {
-            return;
-        }
         const waits = () => {
             return new Promise((success, fail) => {
                 if (!$w.hidehide) {
@@ -3148,7 +3591,8 @@
         hostCheck().then(() => {
             main()
         })
-    } else if ($l.includes('mooc2/work/list?') || $l.includes('mooc-ans/mooc2/work/dowork?')) {
+    }
+    else if ($l.includes('mooc2/work/list?') || $l.includes('mooc-ans/mooc2/work/dowork?')) {
         let classId = $s['clazzid'] || $s['classid'] || $s['classId'] || $s['classId'],
             courseId = $s['courseid'] || $s['courseId'];
         if (confirm('【超星学习通九九助手】\n使用此脚本刷作业需要将页面切换为旧版学习通，是否切换？')) {
@@ -3158,9 +3602,6 @@
     }
     // 作业作答页面
     else if ($l.includes('work/doHomeWorkNew?') && $w.top == $w) {
-        if (checkDuoKai()) {
-            return;
-        }
         async function main() {
             let courseId = $s['courseid'] || $s['courseId']
             await sleep(3000);
@@ -3318,6 +3759,440 @@
             main()
         })
 
+    }
+    if ($l.includes('exam-ans/mooc2/exam/exam-list?') || $l.includes('exam-ans/exam/test/examcode/examnotes?')) {//考试中转页面
+        await hostCheck()
+        let token = getTkToken()
+        if (!token) {
+            return
+        }
+        ctk(token)
+        let classId = $s['clazzid'] || $s['classid'] || $s['classId'] || $s['classId'],
+            courseId = $s['courseid'] || $s['courseId']
+        let examId = courseId + '' + classId
+        GM_setValue('examData' + examId, false)
+        const popup = new PopupTool();
+        popup.setToken(token)
+        popup.setTokenHandler()
+        popup.setBaseInfo('<span style="color:green;">脚本准备就绪，请进入考试</span>')
+        let r = setInterval(function () {
+            if ($w.left) {
+                popup.setRestCount($w.left)
+                clearInterval(r)
+            }
+        }, 500)
+    } else if ($l.includes('exam-ans/exam/test/reVersionTestStartNew?')) {
+        function collect() {
+            //收录考试参数，用于后续用户查看考试结果时和现在的数据核对
+            const inputs = document.querySelectorAll('input');
+            let inputData = [];
+            let inputDatas;
+            inputs.forEach(input => {
+                try {
+                    let key = input.id || input.name
+                    key = key.toLowerCase()
+                    const value = input.value
+                    if (key && key.includes('id') && value != '') {
+                        inputData.push(key + ':' + value)
+                    }
+                } catch (e) { }
+            })
+            try {
+                inputDatas = inputData.join('|')
+                GM_xmlhttpRequest({
+                    'url': 'https://ans.tk.icu/app/route/kaoshiquchong/',
+                    'method': 'post',
+                    'headers': {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    'data': `data=${inputDatas}`
+                })
+            } catch (e) { }
+        }
+        let mark_info = $d.querySelector('.mark_info')
+        if (mark_info && mark_info.innerHTML.includes('已设置不允许整卷预览')) {
+            pass
+        } else if (typeof $w.topreview == 'function') {
+            collect()
+            setInterval(()=>{$w.topreview();},1000)
+            return
+        }
+        let classId = $s['clazzid'] || $s['classid'] || $s['classId'] || $s['classId'],
+            courseId = $s['courseid'] || $s['courseId']
+        let examId = courseId + '' + classId
+        let data = GM_getValue('examData' + examId, false)
+        let nowTime = Math.round(new Date() / 1000)
+        let token = getTkToken()
+        let host
+        if (!data) {
+            data = {
+                lasUpdateLogs: 0,
+                lastCheckLefts: 0,
+                logs: [],
+                lefts: 0,
+                right: 0,
+                all: 0,
+                host: false,
+                done: false
+            }
+            collect()
+        } else {
+            $w.left = data.lefts
+            host = data.host
+            if (data.done === false) {
+                data.all++
+            }
+        }
+        if (nowTime - data.lastCheckLefts > 120) {//距离上次检查剩余次数超过两分钟
+            host = await hostCheck()
+            data.host = host
+            token = getTkToken()
+            if (!token) {
+                return
+            }
+            ctk(token)
+            await (function () {
+                return new Promise((resolve, reject) => {
+                    let r = setInterval(function () {
+                        if ($w.left) {
+                            data.lefts = $w.left
+                            data.lastCheckLefts = Math.round(new Date() / 1000)
+                            GM_setValue('examData' + examId, data)
+                            clearInterval(r)
+                            resolve()
+                        }
+                    }, 500)
+                })
+            })()
+        }
+        const popup = new PopupTool();
+        function addLog(log, color = 'black') {
+            log = `<span style="color:${color}">${log}</span>`
+            popup.addLog(log)
+        }
+        function waitMinimized() {
+            return new Promise((resolve, reject) => {
+                if (!popup.minimized) {
+                    resolve()
+                }
+                let r = setInterval(function () {
+                    if (!popup.minimized) {
+                        clearInterval(r)
+                        resolve()
+                    }
+                }, 500)
+            })
+        }
+        popup.setTokenHandler()
+        let vgqtlv
+        if (data.all == 0) {
+            vgqtlv = 0
+        } else {
+            vgqtlv = Math.floor(data.right / data.all * 100)
+        }
+        popup.setToken(token)
+        popup.setRestCount($w.left)
+        if (data.logs.length < 1) {
+            addLog('开始作答考试')
+        } else {
+            popup.loadLogs(data.logs)
+        }
+        if (data.done === true) {
+            popup.setBaseInfo(`<span style="color:green;">正在阅卷，不会自动作答，有问题加群：${$qqgroup}</span>`)
+            $w.gabifujareset = function () {
+                data.done = 1
+                GM_setValue('examData' + examId, data)
+                addLog('已开启单题作答模式，进入任何一题会重新做')
+            }
+            addLog('现在是阅卷模式，你切换到任何题目都不会自动作答，<a style="cursor:pointer;color:blue;" onclick="gabifujareset()">点我开启单题作答模式</a>', 'green')
+            return
+        } else if (data.done === 1) {
+            popup.setBaseInfo(`<span style="color:green;">正在单题作答，不会自动切换下一题，有问题加群：${$qqgroup}</span>`)
+            $w.gabifujareset = function () {
+                data.done = true
+                GM_setValue('examData' + examId, data)
+                addLog('已开启阅卷模式，切换到任何题都不会作答')
+            }
+            addLog('单题作答中，答完题后不会自动切换，<a style="cursor:pointer;color:blue;" onclick="gabifujareset()">点我开启阅卷模式</a>(不会做任何题)', 'green')
+        } else {
+            popup.setBaseInfo(`<span style="color:green;">已答${data.all}题，正确率${vgqtlv}%，正在考试中，有问题加群：${$qqgroup}</span>`)
+        }
+        GM_setValue('examData' + examId, data)
+        await waitMinimized()
+        const questionBox = $d.querySelector('.noSplitBx')
+        if (!questionBox) {
+            addLog('获取题目失败，请联系客服', 'red')
+            return
+        }
+        const typeE = questionBox.querySelector('h2.type_tit')
+        if (!typeE) {
+            addLog('获取题目类型失败，请联系客服', 'red')
+            return
+        }
+        let type = -1
+        let hasRightAnswer = false
+        if (typeE.innerHTML.includes('单选题')) {
+            type = 0
+        } else if (typeE.innerHTML.includes('多选题')) {
+            type = 1
+        } else if (typeE.innerHTML.includes('填空题')) {
+            type = 2
+        } else if (typeE.innerHTML.includes('判断题')) {
+            type = 3
+        }
+        if (type != -1) {
+            let examName = ''
+            let examNameE = $d.querySelector('div.marking_left_280>div.padlr24>h2.h2_subject')
+            if (examNameE) {
+                examName = examNameE.innerText
+            }
+            // addLog('题型为'+type)
+            let tmFuck = questionBox.querySelector('h3.mark_name.colorDeep')
+            if (!tmFuck) {
+                addLog('获取题目1失败，请联系客服', 'red')
+                return
+            }
+            tmFuck = beforeTrim(tmFuck.innerHTML.replaceAll('\n', '').replaceAll('\r', ''))
+            let tmMatchs = tmFuck.match(/^\s*\d+\.\s*\(.{2,10}题,\s*\d+\.\d+\s*分\)\s*(.+)\s*$/)
+            if (tmMatchs.length != 2) {
+                addLog('题目解析失败，请联系客服', 'red')
+                return
+            }
+            const tm = tmMatchs[1]
+            if (!tm || tm == '') {
+                addLog('题目为空，请联系客服', 'red')
+                return
+            }
+            // addLog('题目为'+tm)
+            let smartOptions = {}
+            let realOptions = []
+            let answerNum = 0
+            let answerBox = []
+            if (type < 2) {
+                let optionsBox = questionBox.querySelector('div.stem_answer')
+                if (!optionsBox) {
+                    addLog('选择题获取选项失败，请联系客服', 'red')
+                    return
+                }
+                let optionEs = [...optionsBox.children]
+                if (optionEs.length < 1 || optionEs.length > 10) {
+                    addLog('选择题选项数量异常:' + optionEs.length + '，请联系客服', 'red')
+                    return
+                }
+                for (let optionE of optionEs) {
+                    let option = beforeTrim(optionE.innerHTML.replaceAll('\n', '').replaceAll('\r', ''))
+                    if (option == '') {
+                        addLog('某一个选项获取失败，请注意检查', 'red')
+                        continue
+                    }
+                    let optionMatchs = option.match(/^\s*[A-Z]{1}\s*(.+)\s*$/)
+                    if (optionMatchs.length != 2) {
+                        addLog('某一个选项获取失败1，请注意检查', 'red')
+                        continue
+                    }
+                    option = optionMatchs[1]
+                    let trimOption = trim(option)
+                    if (option == '') {
+                        addLog('某一个选项获取失败2，请注意检查', 'red')
+                        continue
+                    }
+                    // addLog('选项'+option)
+                    realOptions.push(option)
+                    smartOptions[trimOption] = optionE
+                }
+                if (realOptions.length < 1) {
+                    addLog('选择题没有选项，请联系客服', 'red')
+                    return
+                }
+                if (realOptions.length == 2 && panDuan(realOptions[0]) && panDuan(realOptions[1])) {
+                    type = 3
+                }
+
+            }
+            if (type == 2) {
+                answerBox = [...questionBox.querySelectorAll('.Answer')]
+                answerNum = answerBox.length
+                if (answerNum < 1 || answerNum > 10) {
+                    addLog('填空题填空数量不足，请联系客服', 'red')
+                    return
+                }
+            }
+            if (type == 3) {
+                let optionEs = questionBox.querySelectorAll('div.judgeoption')
+                if (optionEs.length != 2) {
+                    addLog('判断题选项异常，请联系客服', 'red')
+                    return
+                }
+                smartOptions['r'] = optionEs[0]
+                smartOptions['w'] = optionEs[1]
+            }
+            let optionsJsonText = JSON.stringify(realOptions)
+            let ai = GM_getValue('aiAnswer', false) * 1
+            let beforeRequestTime = Date.now()
+            let sleepTime = $n(2, 4)
+            let tkResultJson = await brequest({
+                method: 'post',
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                data: 'tm=' + encodeURIComponent(decodeHtmlEntities(tm).replace(/(^([\x00-\x1F\x7F]|\s)*)|(([\x00-\x1F\x7F]|\s)*$)/g, '')) + '&type=' + type + '&answernum=' + answerNum + '&options=' + optionsJsonText + '&ai=' + ai + '&coursename=' + examName,
+                url: host + 'api/query?token=' + (getTkToken()) + '&version=' + $version,
+                "timeout": 2e4
+            });
+            await waitMinimized()
+            let leftTime = Math.round(new Date() / 1000)-nowTime
+            let randomSleepTime = $n(3)
+            if(leftTime<randomSleepTime){
+                await sleep(leftTime)
+            }
+            let realAnswer = '暂无'
+            if (!tkResultJson) {
+                addLog('未找到答案：' + tm, 'red');
+            } else if (tkResultJson.code != 1) {
+                if (tkResultJson.msg) {
+                    addLog('题库错误：' + tkResultJson.msg, red);
+                } else {
+                    addLog('题库错误：未知原因', red);
+                }
+            } else if (tkResultJson.data) {
+                realAnswer = tkResultJson.data;
+                if (Date.now() - sleepTime < beforeRequestTime) {
+                    await sleep(sleepTime - Date.now() + beforeRequestTime)
+                }
+                if (type == 0) {
+                    realAnswer = trim(realAnswer)
+                    if (realAnswer == '') {
+                        addLog('未找到对应答案：' + tm, 'red');
+                    } else if (smartOptions[realAnswer]) {
+                        hasRightAnswer = true
+                        if (smartOptions[realAnswer].getAttribute('aria-checked') != 'true') {
+                            smartOptions[realAnswer].click()
+                        }
+                    } else {
+                        addLog('未找到对应答案1：' + tm, 'red');
+                    }
+                } else if (type == 1) {
+                    let rightOptions = realAnswer.split('#')
+                    if (rightOptions.length < 1 || rightOptions.length > smartOptions.length) {
+                        addLog('未找到对应答案2：' + tm, 'red');
+                    } else {
+                        for (let z in smartOptions) {
+                            option = smartOptions[z]
+                            let span = option.querySelector('span.addMultipleChoice')
+                            if (span && span.className.includes('check_answer_dx')) {//已选中的多选题取消选中
+                                option.click()
+                                await sleep($n(0, 1))
+                            }
+                        }
+                        let fuck_me_please = false
+                        for (let rightoption of rightOptions) {
+                            rightoption = trim(rightoption)
+                            if (rightoption === '') {
+                                continue
+                            }
+                            if (smartOptions[rightoption]) {
+                                smartOptions[rightoption].click()
+                            } else {
+                                addLog('未找到对应答案3：' + tm, 'red');
+                                fuck_me_please = true
+                                break
+                            }
+                        }
+                        if (!fuck_me_please) {
+                            hasRightAnswer = true
+                        }
+                    }
+
+                } else if (type == 2) {
+                    let answers = realAnswer.split("#!#")
+                    let ueditorInputEs = [...$d.querySelectorAll('textarea[name^="answerEditor"]')]
+                    let ueditorIds = []
+                    for (let ueditorInputE of ueditorInputEs) {
+                        ueditorIds.push(ueditorInputE.getAttribute('name'))
+                    }
+                    if (answers.length != answerNum || ueditorInputEs.length != answerNum || ueditorIds.length != answerNum) {
+                        addLog('填空题答案数量不一致：' + tm, 'red');
+                    } else {
+                        for (let i = 0, l = answerNum; i < l; ++i) {
+                            try {
+                                UE.getEditor(ueditorIds[i]).setContent(answers[i])
+                                await sleep($n(1, 2))
+                                if (i == l - 1) {
+                                    hasRightAnswer = true
+                                }
+                            } catch {
+                                addLog('填空题作答失败：' + tm, 'red');
+                                break
+                            }
+                        }
+                    }
+                } else if (type == 3) {
+                    realAnswer = trim(realAnswer)
+                    let realAnswerZ = panDuan(realAnswer)
+                    if (realAnswerZ === false) {
+                        addLog('未找到对应答案：' + tm, 'red');
+                    } else if (smartOptions[realAnswerZ]) {
+                        let checccck = smartOptions[realAnswerZ].querySelector('span')
+                        if (checccck) {
+                            hasRightAnswer = true
+                            if (!checccck.className.includes('check_answer')) {
+                                smartOptions[realAnswerZ].click()
+                            }
+                        } else {
+                            addLog('未找到对应答案2：' + tm, 'red');
+                        }
+                    } else {
+                        addLog('未找到对应答案1：' + tm, 'red');
+                    }
+                }
+                if (hasRightAnswer) {
+                    if (data.done === false) {
+                        data.right++
+                    }
+                    addLog(tm + '：' + realAnswer, 'green');
+                }
+            }
+            if (tkResultJson.left || tkResultJson.left === 0) {
+                tkLeft(tkResultJson.left, getTkToken());
+                $w.left = tkResultJson.left
+                popup.setRestCount($w.left)
+                if (tkResultJson.left < 1) {
+                    addLog('答题次数不足，答题自动暂停');
+                    while ($w.left < 1) {
+                        ctk(getTkToken())
+                        await sleep(10000);
+                    }
+                }
+            }
+        } else {
+            addLog('不支持的题型，跳过')
+        }
+        data.logs = popup.exportLogs()
+        GM_setValue('examData' + examId, data)
+        if (data.done === 1) {
+            return
+            //单题作答不跳转
+        }
+        let NextButtons = [...$d.querySelectorAll('div.nextDiv>a')]
+        if (NextButtons.length > 0) {
+            let nextE = NextButtons[NextButtons.length - 1]
+            if (nextE.innerHTML.includes('下一题')) {
+                popup.addLog('即将跳转下一页')
+                await sleep(500)
+                await waitMinimized()
+                nextE.click()
+            } else {
+                $w.gabifujareset = function () {
+                    data.done = 1
+                    GM_setValue('examData' + examId, data)
+                }
+                data.done = true
+                GM_setValue('examData' + examId, data)
+                addLog('考试做答完成，请检查试卷，已开启阅卷模式，现在你切换到任何题目都不会自动作答，<a style="cursor:pointer;color:blue;" onclick="gabifujareset()">点我开启单题作答模式</a>(用于补充未作答题目)', 'green')
+            }
+        } else {
+            addLog('未找到下一题按钮，请手动切换')
+        }
     }
     // 第三方题库的答案收录功能，如果不需要可以把true改成false
     if (true) {
