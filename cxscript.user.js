@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.6.5
+// @version      2.6.6
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -4049,9 +4049,9 @@
                 addLog('未找到答案：' + tm, 'red');
             } else if (tkResultJson.code != 1) {
                 if (tkResultJson.msg) {
-                    addLog('题库错误：' + tkResultJson.msg, red);
+                    addLog('题库错误：' + tkResultJson.msg, 'red');
                 } else {
-                    addLog('题库错误：未知原因', red);
+                    addLog('题库错误：未知原因', 'red');
                 }
             } else if (tkResultJson.data) {
                 realAnswer = tkResultJson.data;
