@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.6.6
+// @version      2.6.7
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -2068,7 +2068,7 @@
                                 <div class="form-group col-md-6">
                                     <label for="exampleInputPassword1">视频倍速</label>
                                     <input type="number" class="form-control" id="beisuInput" />
-                                    <small class="form-text text-muted">倍速大于1倍会被清空进度</small>
+                                    <small class="form-text text-muted">倍速大于1倍会被清空进度，大于2倍可能无法完成任务</small>
                                 </div>
                                 <div class="form-group col-md-6">
                                     <label for="exampleInputPassword1">最低正确率</label>
@@ -2690,7 +2690,15 @@
                                                 clearInterval(barr);
                                                 break loopType;
                                             } else {
-                                                beisu > 1 && !allowBs && logs.addLog('此视频不允许倍速播放，开启倍速会被清空进度，当前倍速为' + String(beisu) + '倍', 'red');
+                                                if(beisu > 1){
+                                                    if(allowBs){
+                                                        if(beisu > 2){
+                                                            logs.addLog('此视频允许倍速播放，但倍速大于2，任务可能无法完成，当前倍速为' + String(beisu) + '倍', 'red');
+                                                        }
+                                                    }else{
+                                                        logs.addLog('此视频不允许倍速播放，开启倍速会被清空进度或无法完成，当前倍速为' + String(beisu) + '倍', 'red');
+                                                    }
+                                                }
                                                 let left = Math.ceil(totalMin / beisu - min)
                                                 if (left < -1) {
                                                     logs.addLog('视频已观看完毕，但视频任务未完成：' + jobData.property.name, 'red');
@@ -3601,20 +3609,52 @@
     }
     // 作业作答页面
     else if ($l.includes('work/doHomeWorkNew?') && $w.top == $w) {
+        let host=hostList[0]
+        let token
+        const popup = new PopupTool();
+        function waitMinimized() {
+            return new Promise((resolve, reject) => {
+                if (!popup.minimized) {
+                    resolve()
+                }
+                let r = setInterval(function () {
+                    if (!popup.minimized) {
+                        clearInterval(r)
+                        resolve()
+                    }
+                }, 500)
+            })
+        }
+        function addLog(info,color='black'){
+            info = `<span style="color:${color};">${info}</span>`
+            popup.addLog(info)
+        }
         async function main() {
+            ctk(token)
+            await (function () {
+                return new Promise((resolve, reject) => {
+                    let r = setInterval(function () {
+                        if ($w.left) {
+                            popup.setRestCount($w.left)
+                            clearInterval(r)
+                            resolve()
+                        }
+                    }, 500)
+                })
+            })()
+            let courseName = '作业'
+            let titleE = $d.querySelector('div.headerwrap>h1>span[title="frdgsgdrs"]>a')
+            if(titleE){
+                let courseNamez = titleE.innerText
+                if(courseNamez!==''&&courseNamez.length>1&&courseNamez.length<20){
+                    courseName = courseNamez
+                }
+            }
             let courseId = $s['courseid'] || $s['courseId']
             await sleep(3000);
-            let wrap1000 = $d.querySelector('.wrap1000')
-            let div = $d.createElement('div')
-            div.id = "skinfo"
-            div.setAttribute('style', "color:white;width:200px;height:auto;float:right;background-color:gray")
-            wrap1000.prepend(div)
-            await sleep(100);
             let tmEs = $d.getElementsByClassName('TiMu'),
-                wid = $d.getElementById('workLibraryId').value,
-                addLog = (info) => {
-                    $d.getElementById('skinfo').innerHTML += '<p>' + info + '</p>';
-                };
+                wid = $d.getElementById('workLibraryId').value
+            popup.setBaseInfo('<span style="color:green;">正在作答作业</span>')
             addLog('开始作答作业');
             for (let i = 0, l = tmEs.length; i < l; i++) {
                 let tmE = tmEs[i],
@@ -3628,7 +3668,7 @@
                     }
                 }
                 if (!['0', '1', '2', '3'].includes(tmT)) {
-                    addLog('不支持的题型');
+                    addLog('不支持的题型','red');
                     continue;
                 }
                 let questionE = tmE.querySelector('.fontLabel') || tmE.querySelector('.Zy_TItle'),//兼容华东理工大学
@@ -3642,7 +3682,7 @@
                 if (tmT == '2') {
                     questionId = tmE.getAttribute('data')
                     if (!questionId) {
-                        addLog('无法获取题目信息');
+                        addLog('无法获取题目信息','red');
                         continue;
                     }
                     inputEs.forEach(iframe => {
@@ -3667,14 +3707,16 @@
                     }
                 }
                 optionsList = JSON.stringify(optionsList) === '["",""]' ? ["对", "错"] : optionsList
+                await waitMinimized()
                 let optionsListJson = encodeURIComponent(JSON.stringify(optionsList)),
                     starttime = Date.now(),
+                    ai = GM_getValue('aiAnswer', false)?'1':'0',
                     tkResultJson = await brequest({
                         method: 'post',
                         headers: {
                             "Content-Type": "application/x-www-form-urlencoded"
                         },
-                        data: 'tm=' + encodeURIComponent(question) + '&answernum=' + answernum + '&type=' + tmT + '&wid=' + wid + '&cid=' + courseId + '&options=' + optionsListJson,
+                        data: 'tm=' + encodeURIComponent(question) + '&answernum=' + answernum + '&type=' + tmT + '&wid=' + wid + '&cid=' + courseId + '&options=' + optionsListJson+'&ai='+ai+'&coursename='+courseName,
                         timeout: 2e4,
                         url: host + 'api/query?token=' + (getTkToken()) + '&version=' + $version
                     }),
@@ -3684,23 +3726,25 @@
                     hasAnswer = false;
                 sleeptime < 0 && (sleeptime = 100);
                 await sleep(sleeptime);
+                await waitMinimized()
                 if (!tkResultJson) {
-                    addLog('未找到答案：' + question);
+                    addLog('未找到答案：' + question,'red');
                     continue;
                 }
                 if (tkResultJson.code != 1) {
                     if (tkResultJson.msg) {
-                        addLog('题库错误：' + tkResultJson.msg);
+                        addLog('题库错误：' + tkResultJson.msg,'red');
                     } else {
-                        addLog('题库错误：未知原因');
+                        addLog('题库错误：未知原因','red');
                     }
                     continue;
                 } else if (tkResultJson.data) {
-                    answer = tkResultJson.data;
+                    answer = tkResultJson.data
+                    $w.left = tkResultJson.left
+                    popup.setRestCount(tkResultJson.left)
                 }
-                tkLeft(tkResultJson.left, getTkToken());
                 if (tkResultJson.left < 1) {
-                    addLog('答题次数不足，答题自动暂停');
+                    addLog('答题次数不足，答题自动暂停','red');
                     while ($w.left < 1) {
                         ctk(getTkToken())
                         await sleep(10000);
@@ -3729,7 +3773,7 @@
                         optionEs[1].getElementsByTagName('input')[0].click();
                         hasAnswer = true
                     } else {
-                        addLog(question + '：未找到答案');
+                        addLog(question + '：未找到答案','red');
                     }
                 } else {
                     let answers = answer.split("#!#")
@@ -3746,18 +3790,24 @@
                     }
                 }
                 if (hasAnswer) {
-                    addLog(question + '：' + answer);
+                    addLog(question + '：' + answer,'blue');
                 }
             }
-            addLog('作业作答完成，题库剩余查询次数：' + $w.left);
+            addLog('作业作答完成，请检查后自行提交（如果不交别忘了点保存）','green');
         }
-        hostCheck().then(() => {
-            if (!confirm('【超星学习通九九助手】\n点击确定开始作答作业')) {
-                return;
-            }
-            main()
-        })
-
+        host = await hostCheck()
+        if(!host){
+            return
+        }
+        token = getTkToken()
+        if (!token) {
+            return
+        }
+        popup.setToken(token)
+        if (!confirm('【超星学习通九九助手】\n点击确定开始作答作业')) {
+            return;
+        }
+        main()
     }
     if ($l.includes('exam-ans/mooc2/exam/exam-list?') || $l.includes('exam-ans/exam/test/examcode/examnotes?')) {//考试中转页面
         await hostCheck()
@@ -3813,7 +3863,7 @@
             pass
         } else if (typeof $w.topreview == 'function') {
             collect()
-            setInterval(()=>{$w.topreview();},1000)
+            setInterval(() => { $w.topreview(); }, 1000)
             return
         }
         let classId = $s['clazzid'] || $s['classid'] || $s['classId'] || $s['classId'],
@@ -4039,9 +4089,9 @@
                 "timeout": 2e4
             });
             await waitMinimized()
-            let leftTime = Math.round(new Date() / 1000)-nowTime
+            let leftTime = Math.round(new Date() / 1000) - nowTime
             let randomSleepTime = $n(3)
-            if(leftTime<randomSleepTime){
+            if (leftTime < randomSleepTime) {
                 await sleep(leftTime)
             }
             let realAnswer = '暂无'
