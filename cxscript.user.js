@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.6.7
+// @version      2.6.8
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
