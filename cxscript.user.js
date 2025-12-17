@@ -949,7 +949,7 @@
                             left = 0
                         }
                         tkLeft(left, token);
-                        if (success.hasInfo) {
+                        if (success.msg.length > 4) {
                             if (success.msg !== $w.lastLog) {//判断是否为重复提示，防止造成骚扰
                                 $w.lastLog = success.msg
                                 try {
@@ -2690,12 +2690,12 @@
                                                 clearInterval(barr);
                                                 break loopType;
                                             } else {
-                                                if(beisu > 1){
-                                                    if(allowBs){
-                                                        if(beisu > 2){
+                                                if (beisu > 1) {
+                                                    if (allowBs) {
+                                                        if (beisu > 2) {
                                                             logs.addLog('此视频允许倍速播放，但倍速大于2，任务可能无法完成，当前倍速为' + String(beisu) + '倍', 'red');
                                                         }
-                                                    }else{
+                                                    } else {
                                                         logs.addLog('此视频不允许倍速播放，开启倍速会被清空进度或无法完成，当前倍速为' + String(beisu) + '倍', 'red');
                                                     }
                                                 }
@@ -3609,7 +3609,7 @@
     }
     // 作业作答页面
     else if ($l.includes('work/doHomeWorkNew?') && $w.top == $w) {
-        let host=hostList[0]
+        let host = hostList[0]
         let token
         const popup = new PopupTool();
         function waitMinimized() {
@@ -3625,16 +3625,21 @@
                 }, 500)
             })
         }
-        function addLog(info,color='black'){
+        function addLog(info, color = 'black') {
             info = `<span style="color:${color};">${info}</span>`
             popup.addLog(info)
+        }
+        $w.logs = {
+            addLog: (log) => {
+                addLog(log);
+            }
         }
         async function main() {
             ctk(token)
             await (function () {
                 return new Promise((resolve, reject) => {
                     let r = setInterval(function () {
-                        if ($w.left) {
+                        if (typeof $w.left !== 'undefined' && typeof $w.left === 'number' && !Number.isNaN($w.left)) {
                             popup.setRestCount($w.left)
                             clearInterval(r)
                             resolve()
@@ -3644,9 +3649,9 @@
             })()
             let courseName = '作业'
             let titleE = $d.querySelector('div.headerwrap>h1>span[title="frdgsgdrs"]>a')
-            if(titleE){
+            if (titleE) {
                 let courseNamez = titleE.innerText
-                if(courseNamez!==''&&courseNamez.length>1&&courseNamez.length<20){
+                if (courseNamez !== '' && courseNamez.length > 1 && courseNamez.length < 20) {
                     courseName = courseNamez
                 }
             }
@@ -3655,6 +3660,10 @@
             let tmEs = $d.getElementsByClassName('TiMu'),
                 wid = $d.getElementById('workLibraryId').value
             popup.setBaseInfo('<span style="color:green;">正在作答作业</span>')
+            while ($w.left < 1) {
+                ctk(getTkToken())
+                await sleep(10000);
+            }
             addLog('开始作答作业');
             for (let i = 0, l = tmEs.length; i < l; i++) {
                 let tmE = tmEs[i],
@@ -3668,7 +3677,7 @@
                     }
                 }
                 if (!['0', '1', '2', '3'].includes(tmT)) {
-                    addLog('不支持的题型','red');
+                    addLog('不支持的题型', 'red');
                     continue;
                 }
                 let questionE = tmE.querySelector('.fontLabel') || tmE.querySelector('.Zy_TItle'),//兼容华东理工大学
@@ -3682,7 +3691,7 @@
                 if (tmT == '2') {
                     questionId = tmE.getAttribute('data')
                     if (!questionId) {
-                        addLog('无法获取题目信息','red');
+                        addLog('无法获取题目信息', 'red');
                         continue;
                     }
                     inputEs.forEach(iframe => {
@@ -3710,13 +3719,13 @@
                 await waitMinimized()
                 let optionsListJson = encodeURIComponent(JSON.stringify(optionsList)),
                     starttime = Date.now(),
-                    ai = GM_getValue('aiAnswer', false)?'1':'0',
+                    ai = GM_getValue('aiAnswer', false) ? '1' : '0',
                     tkResultJson = await brequest({
                         method: 'post',
                         headers: {
                             "Content-Type": "application/x-www-form-urlencoded"
                         },
-                        data: 'tm=' + encodeURIComponent(question) + '&answernum=' + answernum + '&type=' + tmT + '&wid=' + wid + '&cid=' + courseId + '&options=' + optionsListJson+'&ai='+ai+'&coursename='+courseName,
+                        data: 'tm=' + encodeURIComponent(question) + '&answernum=' + answernum + '&type=' + tmT + '&wid=' + wid + '&cid=' + courseId + '&options=' + optionsListJson + '&ai=' + ai + '&coursename=' + courseName,
                         timeout: 2e4,
                         url: host + 'api/query?token=' + (getTkToken()) + '&version=' + $version
                     }),
@@ -3728,14 +3737,14 @@
                 await sleep(sleeptime);
                 await waitMinimized()
                 if (!tkResultJson) {
-                    addLog('未找到答案：' + question,'red');
+                    addLog('未找到答案：' + question, 'red');
                     continue;
                 }
                 if (tkResultJson.code != 1) {
                     if (tkResultJson.msg) {
-                        addLog('题库错误：' + tkResultJson.msg,'red');
+                        addLog('题库错误：' + tkResultJson.msg, 'red');
                     } else {
-                        addLog('题库错误：未知原因','red');
+                        addLog('题库错误：未知原因', 'red');
                     }
                     continue;
                 } else if (tkResultJson.data) {
@@ -3744,7 +3753,7 @@
                     popup.setRestCount(tkResultJson.left)
                 }
                 if (tkResultJson.left < 1) {
-                    addLog('答题次数不足，答题自动暂停','red');
+                    addLog('答题次数不足，答题自动暂停', 'red');
                     while ($w.left < 1) {
                         ctk(getTkToken())
                         await sleep(10000);
@@ -3773,7 +3782,7 @@
                         optionEs[1].getElementsByTagName('input')[0].click();
                         hasAnswer = true
                     } else {
-                        addLog(question + '：未找到答案','red');
+                        addLog(question + '：未找到答案', 'red');
                     }
                 } else {
                     let answers = answer.split("#!#")
@@ -3790,13 +3799,13 @@
                     }
                 }
                 if (hasAnswer) {
-                    addLog(question + '：' + answer,'blue');
+                    addLog(question + '：' + answer, 'blue');
                 }
             }
-            addLog('作业作答完成，请检查后自行提交（如果不交别忘了点保存）','green');
+            addLog('作业作答完成，请检查后自行提交（如果不交别忘了点保存）', 'green');
         }
         host = await hostCheck()
-        if(!host){
+        if (!host) {
             return
         }
         token = getTkToken()
@@ -3825,7 +3834,7 @@
         popup.setTokenHandler()
         popup.setBaseInfo('<span style="color:green;">脚本准备就绪，请进入考试</span>')
         let r = setInterval(function () {
-            if ($w.left) {
+            if (typeof $w.left !== 'undefined' && typeof $w.left === 'number' && !Number.isNaN($w.left)) {
                 popup.setRestCount($w.left)
                 clearInterval(r)
             }
@@ -3903,7 +3912,7 @@
             await (function () {
                 return new Promise((resolve, reject) => {
                     let r = setInterval(function () {
-                        if ($w.left) {
+                        if ($w.left>0) {
                             data.lefts = $w.left
                             data.lastCheckLefts = Math.round(new Date() / 1000)
                             GM_setValue('examData' + examId, data)
