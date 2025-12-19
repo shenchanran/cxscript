@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.6.8
+// @version      2.6.9
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -1557,7 +1557,7 @@
                 courseId = $s['courseid'] || $s['courseId'],
                 cpi = $s['cpi'] || '',
                 courseName = $d.title.replace('-首页', '')
-            $w.location.href = host + `/mooc-ans/course/999999999${$version}.html?ut=s&classid=` + classId + '&courseid=' + courseId + '&cpi=' + cpi + '&coursename=' + courseName + '&uid=' + $uid
+            return host + `/mooc-ans/course/999999999${$version}.html?ut=s&classid=` + classId + '&courseid=' + courseId + '&cpi=' + cpi + '&coursename=' + courseName + '&uid=' + $uid
         }
         div.setAttribute("id", "skpannel")
         if (/Android/i.test(navigator.userAgent) && !/Edg/i.test(navigator.userAgent)) {
@@ -1639,9 +1639,9 @@
             <div id="updateinfo" style="font-size: 16px;text-align: center;color: red;display: none;">脚本有新版本，<a href="https://scriptcat.org/zh-CN/script-show-page/1127" target="_blank">点我前往更新</a></div>
             <div style="font-size: 16px;text-align: center;">该课程支持刷课，请选择您要刷的内容</div>
             <div style="margin-top: 20px;display: flex;justify-content: center;margin-bottom: 10px;">
-                <span
-                    style="cursor: pointer; background-color: #68A4FF; color: white; padding: 2px 15px; line-height: 38px; height: 38px;margin-left: 10px; border: 1px solid #68A4FF;display: inline-block ;border-radius: 23px;margin-right: 10px;"
-                    id="dosk">刷章节</span>
+                <a
+                    target="_blank" style="cursor: pointer; background-color: #68A4FF; color: white; padding: 2px 15px; line-height: 38px; height: 38px;margin-left: 10px; border: 1px solid #68A4FF;display: inline-block ;border-radius: 23px;margin-right: 10px;"
+                    id="dosk">刷章节</a>
                 <span
                     style="cursor: pointer; background-color: #68A4FF; color: white; padding: 2px 15px; line-height: 38px; height: 38px;margin-left: 10px; border: 1px solid #68A4FF;display: inline-block ;border-radius: 23px;margin-right: 10px;"
                     id="doHomework">刷作业</span>
@@ -1716,12 +1716,11 @@
                 $d.querySelector("#token").value = tkToken
                 const pannel = $d.querySelector('#skpannel')
                 const tokentip = $d.querySelector('#tokentip')
-                $d.querySelector('#dosk').addEventListener('click', () => {
-                    pannel.style.display = 'none';
-                    if (newVersion) entrance($w.ServerHost.mooc1Domain.replace('https://', 'http://'))
-                    else entrance("http://" + $w.location.host)
-
-                })
+                if (newVersion){
+                    $d.querySelector('#dosk').setAttribute('href',entrance($w.ServerHost.mooc1Domain.replace('https://', 'http://')))
+                }else{
+                    $d.querySelector('#dosk').setAttribute('href',entrance("http://" + $w.location.host))
+                }
                 $d.querySelector('#doHomework').addEventListener('click', () => {
                     pannel.style.display = 'none';
                     if (newVersion) $d.querySelector('.zy').click()
