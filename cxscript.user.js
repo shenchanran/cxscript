@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.6.9
+// @version      2.7.0
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -2093,7 +2093,7 @@
                 </div>
                 <div class="card" style="margin-top: 10px">
                     <div class="card-body">
-                        <h5 class="card-title title-weight">当前任务进度</h5>
+                        <h5 class="card-title title-weight">当前任务进度（仅供参考，以下方日志为准）</h5>
                         <div class="panel-heading">
                             <div class="progress">
                                 <div class="progress-bar progress-bar-info" id="jdbar"
@@ -3242,10 +3242,11 @@
                                         liveInfo = JSON.parse(liveInfo.responseText);
                                         let duration = liveInfo['temp']['data']['duration'],
                                             timeLongValue = liveInfo['temp']['data']['timeLongValue'] * 60,
-                                            liveStatus = liveInfo['temp']['data']['liveStatus'];
-                                        if (liveStatus != 4) {
-                                            logs.addLog('直播不允许回看，无法播放：' + jobData.property.title, 'red');
-                                            break
+                                            liveStatus = liveInfo['temp']['data']['liveStatus'],
+                                            ifReview = liveInfo['temp']['data']['ifReview'];
+                                        if (liveStatus ==4 && ifReview == 1) {
+                                            logs.addLog('直播不允许回看，无法完成', 'orange');
+                                            break;
                                         }
                                         let indexUrl = $protocol + 'zhibo.chaoxing.com/' + jobData.property['liveId'] + '?courseId=' + courseId + '&classId=' + classId + '&knowledgeId=' + chapterId + '&jobId=' + jobData.jobid + '&userId=' + $uid + '&rt=' + rt + '&livesetenc=' + jobData['liveSetEnc'] + '&isjob=true&watchingInCourse=1&customPara1=' + classId + '_' + courseId + '&customPara2=' + jobData['authEnc'] + '&isNotDrag=1&jobfs=0';
                                         await request({
