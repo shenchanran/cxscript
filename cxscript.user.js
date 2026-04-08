@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.7.4
+// @version      2.7.5
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -3472,7 +3472,8 @@
         // }, 1000)
         let host = hostList[0]
         let token
-        const popup = new PopupTool();
+        const popup = new PopupTool()
+        popup.setTokenHandler()
         function waitMinimized() {
             return new Promise((resolve, reject) => {
                 if (!popup.minimized) {
@@ -3486,14 +3487,9 @@
                 }, 500)
             })
         }
-        function addLog(info, color = 'black') {
+        const addLog = (info, color = 'black')=>{
             info = `<span style="color:${color};">${info}</span>`
             popup.addLog(info)
-        }
-        $w.logs = {
-            addLog: (log, color = 'black') => {
-                addLog(log, color);
-            }
         }
         async function main() {
             try {
@@ -3539,85 +3535,14 @@
                 questionNum = questionsElements.length,
                 finishdQuestionNum = 0,
                 courseId = $s['courseid'] || $s['courseId'];
-            // updateStatus = (r) => {
-            //     if (r) {
-            //         completeBtn.innerHTML = '交卷'
-            //         return
-            //     }
-            //     let msg = '交卷',
-            //         vgqtlv = Math.floor(finishdQuestionNum / questionNum * 100);
-            //     msg += '(正确率:' + vgqtlv + '%)';
-            //     try {
-            //         if (leftQuestionNum == 0) {
-            //             msg += ' 作答完成';
-            //             if (vgqtlv < 50) {
-            //                 alert('【超星学习通九九助手】\n正确率过低，请自行作答或尝试刷新页面重新作答')
-            //             }
-            //         }
-            //     } catch (e) { }
-            //     completeBtn.innerHTML = msg;
-            //     completeBtn.style.width = 'auto'
-            //     completeBtn.style.minWidth = '94px'
-            //     completeBtn.style.padding = '0 5px'
-            // },
-            // log = $d.createElement('div'),
-            // hideButton = $d.createElement('div'),
-            // logs = {
-            //     "addLog": function (str, color = "black") {
-            //         const nowTime = new Date(),
-            //             nowHour = (Array(2).join(0) + nowTime.getHours()).slice(-2),
-            //             nowMin = (Array(2).join(0) + nowTime.getMinutes()).slice(-2),
-            //             nowSec = (Array(2).join(0) + nowTime.getSeconds()).slice(-2),
-            //             logElement = $d.querySelector('#log')
-            //         span = $d.createElement("span")
-            //         span.classList.add('mark_info')
-            //         span.style.color = color
-            //         span.style.display = "block"
-            //         span.innerHTML = `[${nowHour}:${nowMin}:${nowSec}] ${str}`
-            //         logElement.appendChild(span)
-            //         logElement.scrollTop = logElement.scrollHeight
-            //     }
-            // };
-            // $w.logs = logs
-            // hideButton.innerHTML = '点击隐藏/显示脚本'
-            // hideButton.addEventListener('click', function () {
-            //     if ($w.hidehide) {
-            //         this.style.opacity = '1'
-            //         $w.hidehide = false
-            //         updateStatus()
-            //         log.style.display = 'block'
-            //     } else {
-            //         this.style.opacity = '0.02'
-            //         $w.hidehide = true
-            //         updateStatus(true)
-            //         log.style.display = 'none'
-            //     }
-            // })
-            // hideButton.setAttribute('style', 'cursor:pointer;height: 26px;width: 120px;background-color:blue;color:#fff;line-height:26px;text-align: center;margin:0 0 5px 24px;')
-            // log.setAttribute('class', 'padlr24');
-            // log.setAttribute('style', 'height: 800px;overflow-y: auto;line-height: 16px;flex:1;padding-top:0;padding-bottom:50px;')
-            // log.id = 'log';
-            // const marking_left_280 = $d.querySelector('.marking_left_280')
-            // marking_left_280.appendChild(hideButton)
-            // marking_left_280.appendChild(log)
-            // marking_left_280.setAttribute('style', 'display:flex;flex-direction:column;')
-            logs.addLog('开始考试', 'green')
-            // ctk(token)
-            // try {
-            //     const html = $d.querySelector('html').style
-            //     html.userSelect = html.webkitUserSelect = html.khtmlUserSelect = html.mozUserSelect = html.msUserSelect = 'unset'
-            //     $d.querySelector('body').removeAttribute('onselectstart')
-            // } catch (e) { }
-            // setInterval(() => {
-            //     ctk(tkToken)
-            // }, 6e4);
+            addLog('开始考试', 'green')
             for (let questionElement of questionsElements) {
                 let questionId = questionElement.getAttribute('data') || questionElement.querySelector('.questionId').value,
                     questionType = $d.getElementsByName('type' + questionId)[0].getAttribute('value'),
                     tm = trim(questionElement.getElementsByClassName('mark_name')[0].innerHTML).replaceAll('\n', '').replace(/^\d+\.([\x00-\x1F\x7F]|\s)*\(.*题([\x00-\x1F\x7F]|\s)*(,|，)([\x00-\x1F\x7F]|\s)*\d*\.?\d*([\x00-\x1F\x7F]|\s)*(分|points)\)([\x00-\x1F\x7F]|\s)*/ig, ''),
                     question = { 'tm': tm, 'questionId': questionId, 'questionType': questionType };
                 if ($w.left < 1) {
-                    logs.addLog('剩余答题次数不足，考试已暂停，请先<a href="' + host + '?token=' + token + '#2" target="_blank">点我充值</a>（充值后60秒内继续，如果没有继续，请刷新页面）', 'red');
+                    addLog('剩余答题次数不足，考试已暂停，请先<a href="' + host + '?token=' + token + '#2" target="_blank">点我充值</a>（充值后60秒内继续，如果没有继续，请刷新页面）', 'red');
                     while ($w.left < 1) {
                         ctk(token)
                         await sleep(6e4)
@@ -3661,7 +3586,7 @@
                     tkLeft(ctResult['left'], token);
                     popup.setRestCount(ctResult['left'])
                     if (ctResult['code'] != 1) {
-                        logs.addLog(question['tm'] + '：' + ctResult['msg'], 'red');
+                        addLog(question['tm'] + '：' + ctResult['msg'], 'red');
                         continue;
                     }
                     let answer = ctResult['data']
@@ -3720,25 +3645,25 @@
                             hasAnswer = true
                         }
                     } else {
-                        logs.addLog(question['tm'] + '：暂不支持的题型', 'red')
+                        addLog(question['tm'] + '：暂不支持的题型', 'red')
                     }
                     if (hasAnswer) {
-                        logs.addLog(question['tm'] + '：' + answer, 'blue');
+                        addLog(question['tm'] + '：' + answer, 'blue');
                         finishdQuestionNum++;
                     } else {
-                        logs.addLog(question['tm'] + '：未找到答案', 'red');
+                        addLog(question['tm'] + '：未找到答案', 'red');
                     }
                     // updateStatus();
                     let sleeptime = $n(3, 5) - costtime;
                     sleeptime < 0 && (sleeptime = 100);
                     await sleep(sleeptime);
                 } else {
-                    logs.addLog(question['tm'] + '：查题失败', 'red');
+                    addLog(question['tm'] + '：查题失败', 'red');
                 }
             }
             let vgqtlv = Math.floor(finishdQuestionNum / questionNum * 100)
-            logs.addLog(`考试作答完成，预估正确率${vgqtlv}%，请检查`, 'green');
-            logs.addLog('不同题型所占分值不同，实际成绩可能有误差，请仔细检查', 'green');
+            addLog(`考试作答完成，预估正确率${vgqtlv}%，请检查`, 'green');
+            addLog('不同题型所占分值不同，实际成绩可能有误差，请仔细检查', 'green');
         }
         host = await hostCheck()
         if (!host) {
