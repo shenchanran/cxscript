@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.7.5
+// @version      2.7.6
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -1606,7 +1606,35 @@
         if ($l.includes('mycourse/studentcourse?')) {
             if (GM_getValue('directToWork', false)) {
                 GM_setValue('directToWork', false)
-                $d.querySelector('.workTip').previousSibling.click()
+                const workButton = $d.querySelector('.workTip')
+                if (!workButton) {//部分直接发布作业的课程不显示作业切换按钮，所以直接拼接url
+                    const buttons = [...$d.querySelectorAll('div.navshow>ul>li>a')];
+                    let classId = false
+                    let courseId = false
+                    let enc = false
+                    buttons.forEach(a => {
+                        const href = a.href
+                        const zclassId = href.match(/classId=([^&]+)/i)?.[1]
+                        if(zclassId){
+                            classId = zclassId
+                        }
+                        const zcourseId = href.match(/courseId=([^&]+)/i)?.[1]
+                        if(zcourseId){
+                            courseId = zcourseId
+                        }
+                        const zenc = href.match(/enc=([^&]+)/i)?.[1]
+                        if(zenc){
+                           enc = zenc 
+                        }
+                    });
+                    if(classId&&courseId&&enc){
+                        $w.location.href = `/mooc-ans/work/getAllWork?classId=${classId}&courseId=${courseId}&enc=${enc}`
+                    }else{
+                        alert('【超星学习通九九助手】\n无法跳转作业页面，请联系客服')
+                    }
+                } else {
+                    $d.querySelector('.workTip').previousSibling.click()
+                }
                 return
             }
             newVersion = false
@@ -1888,17 +1916,17 @@
                     ctk(tkToken)
                 })
                 const ttttime = Math.round(new Date() / 1000)
-                if ($w.navigator.userAgent.includes('Edg/')&&$l.includes('.chaoxing.com')) {
+                if ($w.navigator.userAgent.includes('Edg/') && $l.includes('.chaoxing.com')) {
                     let time = Math.round(new Date() / 1000)
                     if (time - GM_getValue('mooc1Check', ttttime) > 2) {
-                        let cccc = $layer('<span style="color:red;">脚本权限不足</span>，此脚本需要mooc1.chaoxing.com的页面权限，请在<a href="https://mooc1.chaoxing.com/" target="_blank">mooc1.chaoxing.com（点击打开）</a>页面授权并刷新页面，不要在此页面操作，授权完毕请返回此页面，具体操作方式请参考图片：<br><br><hr><br><img style="width:100%;" src="'+tipsPicBase64+'">', '超星学习通九九助手', false)
-                        let r = setInterval(()=>{
+                        let cccc = $layer('<span style="color:red;">脚本权限不足</span>，此脚本需要mooc1.chaoxing.com的页面权限，请在<a href="https://mooc1.chaoxing.com/" target="_blank">mooc1.chaoxing.com（点击打开）</a>页面授权并刷新页面，不要在此页面操作，授权完毕请返回此页面，具体操作方式请参考图片：<br><br><hr><br><img style="width:100%;" src="' + tipsPicBase64 + '">', '超星学习通九九助手', false)
+                        let r = setInterval(() => {
                             let time = Math.round(new Date() / 1000)
-                            if (time - GM_getValue('mooc1Check', ttttime) <2){
+                            if (time - GM_getValue('mooc1Check', ttttime) < 2) {
                                 clearInterval(r)
                                 cccc()
                             }
-                        },500)
+                        }, 500)
                     }
                 }
             }, 1000);
@@ -3487,7 +3515,7 @@
                 }, 500)
             })
         }
-        const addLog = (info, color = 'black')=>{
+        const addLog = (info, color = 'black') => {
             info = `<span style="color:${color};">${info}</span>`
             popup.addLog(info)
         }
@@ -4352,7 +4380,7 @@
         }, 500)
     }
     if ($l.includes('mooc1.chaoxing.com')) {
-        function awdawuifnwaf(){
+        function awdawuifnwaf() {
             let time = Math.round(new Date() / 1000)
             GM_setValue('mooc1Check', time)
         }
