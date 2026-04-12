@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.7.6
+// @version      2.7.7
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -819,7 +819,6 @@
         },
         trim = (s) => {
             return handleImgs(s)
-                .replaceAll("-", '')
                 .replaceAll(/([\x00-\x1F\x7F]|\s){2,}/g, ' ')
                 .replaceAll(/<[^>]*>/g, '')
                 .replaceAll('javascript:void(0);', '')
