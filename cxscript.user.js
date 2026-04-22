@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.7.7
+// @version      2.7.8
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -1614,21 +1614,21 @@
                     buttons.forEach(a => {
                         const href = a.href
                         const zclassId = href.match(/classId=([^&]+)/i)?.[1]
-                        if(zclassId){
+                        if (zclassId) {
                             classId = zclassId
                         }
                         const zcourseId = href.match(/courseId=([^&]+)/i)?.[1]
-                        if(zcourseId){
+                        if (zcourseId) {
                             courseId = zcourseId
                         }
                         const zenc = href.match(/enc=([^&]+)/i)?.[1]
-                        if(zenc){
-                           enc = zenc 
+                        if (zenc) {
+                            enc = zenc
                         }
                     });
-                    if(classId&&courseId&&enc){
+                    if (classId && courseId && enc) {
                         $w.location.href = `/mooc-ans/work/getAllWork?classId=${classId}&courseId=${courseId}&enc=${enc}`
-                    }else{
+                    } else {
                         alert('【超星学习通九九助手】\n无法跳转作业页面，请联系客服')
                     }
                 } else {
@@ -1835,11 +1835,31 @@
                 const tokentip = $d.querySelector('#tokentip')
                 $d.querySelector('#dosk').addEventListener('click', async () => {
                     pannel.style.display = 'none';
+                    let jumpUrl
                     if (newVersion) {
-                        $w.location.href = entrance($w.ServerHost.mooc1Domain.replace('https://', 'http://'))
+                        jumpUrl = entrance($w.ServerHost.mooc1Domain)
                     } else {
-                        $w.location.href = entrance("http://" + $w.location.host)
+                        jumpUrl = entrance("https://" + $w.location.host)
                     }
+                    GM_xmlhttpRequest({
+                        method: "GET",
+                        url: jumpUrl,
+                        timeout: 5000, // 5秒超时
+                        onload: function (response) {
+                            // 如果状态码在200-299之间，说明HTTPS正常
+                            if (response.status >= 200 && response.status < 300) {
+                                window.location.href = jumpUrl
+                            } else {
+                                window.location.href = jumpUrl.replace('https://','http://')
+                            }
+                        },
+                        onerror: function (err) {
+                            window.location.href = jumpUrl.replace('https://','http://')
+                        },
+                        ontimeout: function () {
+                            window.location.href = jumpUrl.replace('https://','http://')
+                        }
+                    });
                 })
                 $d.querySelector('#doHomework').addEventListener('click', async () => {
                     pannel.style.display = 'none';
