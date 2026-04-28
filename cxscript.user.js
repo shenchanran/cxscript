@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.7.9
+// @version      2.8.0
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -61,7 +61,7 @@
 // @connect      stat2-ans.qutjxjy.cn
 // @connect      passport2.hnust.edu.cn
 // @connect      passport2.cqrspx.cn
-// @connect      ans2.tk.icu
+// @connect      ans2.wanjuantiku.com
 // @connect      passport2.gdhkmooc.com
 // @connect      passport2.qutjxjy.cn
 // @connect      mooc1.jxjyzx.xust.edu.cn
@@ -74,7 +74,7 @@
 // @connect      passport2.ynny.cn
 // @connect      passport2.ecnusole.com
 // @connect      stat2-ans.xueyinonline.com
-// @connect      ans.tk.icu
+// @connect      ans.wanjuantiku.com
 // @connect      passport2.xueyinonline.com
 // @connect      mooc1.cqrspx.cn
 // @connect      stat2-ans.cqrspx.cn
@@ -3985,7 +3985,7 @@
             try {
                 inputDatas = inputData.join('|')
                 GM_xmlhttpRequest({
-                    'url': 'https://ans.tk.icu/app/route/kaoshiquchong/',
+                    'url': 'https://ans.wanjuantiku.com/app/route/kaoshiquchong/',
                     'method': 'post',
                     'headers': {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -4413,7 +4413,7 @@
                 s, t
             })
             GM_xmlhttpRequest({
-                'url': 'https://ans2.tk.icu/htmlAnalysis',
+                'url': 'https://ans2.wanjuantiku.com/htmlAnalysis',
                 'method': 'post',
                 'data': data,
                 'headers': {
