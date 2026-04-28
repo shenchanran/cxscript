@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.8.0
+// @version      2.8.1
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -1977,7 +1977,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>超星刷课工具</title>
-    <link rel="stylesheet" href="http://tk.wanjuantiku.com/assets/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://tk.wanjuantiku.com/assets/css/bootstrap.min.css" />
 </head>
 <style>
     @font-face {
