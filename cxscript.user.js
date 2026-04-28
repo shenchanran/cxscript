@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.7.8
+// @version      2.7.9
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -103,7 +103,7 @@
 // @compatible firefox
 // @compatible chrome
 // @compatible edge
-// @supportURL https://tk.tk.icu/
+// @supportURL https://tk.wanjuantiku.com/
 // @downloadURL https://greasyfork.cn/scripts/cxscript.user.js
 // @updateURL https://greasyfork.cn/scripts/cxscript.meta.js
 // ==/UserScript==
@@ -757,8 +757,8 @@
             });
         },
         hostList = [
-            'https://tk.tk.icu/',
             'https://tk.wanjuantiku.com/',
+            'https://tk.tk.icu/',
             'https://scriptcat.cn/'
         ],
         host = '',
@@ -1897,7 +1897,7 @@
                         <p style="text-indent: 2em;">如果答题次数有问题，可能是您正在使用的token不是正确token</p>
                         <p style="text-indent: 2em;">更换设备、浏览器或者清空浏览器数据会导致token丢失，脚本会自动为您生成一个新Token。</p>
                         <p style="text-indent: 2em;">如果想找回之前的Token，请查看您的微信或支付宝付款记录，在商品名中有充值过的Token。</p>
-                        <p style="text-indent: 2em;">如果您之前的Token绑定过QQ或微信，请直接访问<a href="http://tk.tk.icu/" style="color:blue;" target="_blank">题库官网</a>并使用绑定的账号登录，即可找回原Token。</p>
+                        <p style="text-indent: 2em;">如果您之前的Token绑定过QQ或微信，请直接访问<a href="http://tk.wanjuantiku.com/" style="color:blue;" target="_blank">题库官网</a>并使用绑定的账号登录，即可找回原Token。</p>
                         <p style="text-indent: 2em;">找回Token后请将Token复制到当前页面的Token输入框，然后点击保存按钮。</p>
                         <p style="text-indent: 2em;color:green;">为新Token绑定微信可以获得免费的100答题次数</p>
                         `
@@ -1977,7 +1977,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>超星刷课工具</title>
-    <link rel="stylesheet" href="https://tk.tk.icu/assets/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="http://tk.wanjuantiku.com/assets/css/bootstrap.min.css" />
 </head>
 <style>
     @font-face {
@@ -2441,7 +2441,7 @@
                     safeafew = now
                     ctk(tkToken)
                 } else {
-                    $layer('<p style="text-indent: 2em;">如果答题次数有问题，可能是您正在使用的token不是正确token</p><p style="text-indent: 2em;">更换设备、浏览器或者清空浏览器数据会导致token丢失，脚本会自动为您生成一个新Token。</p><p style="text-indent: 2em;">如果想找回之前的Token，请查看您的微信或支付宝付款记录，在商品名中有充值过的Token。</p><p style="text-indent: 2em;">如果您之前的Token绑定过QQ或微信，请直接访问<a href="http://tk.tk.icu/" target="_blank">题库官网</a>并使用绑定的账号登录，即可找回原Token。</p><p style="text-indent: 2em;">找回Token后请将Token复制到当前页面的Token输入框，然后点击保存按钮。</p><p style="text-indent: 2em;color:green;">为新Token绑定微信可以获得免费的100答题次数</p>')
+                    $layer('<p style="text-indent: 2em;">如果答题次数有问题，可能是您正在使用的token不是正确token</p><p style="text-indent: 2em;">更换设备、浏览器或者清空浏览器数据会导致token丢失，脚本会自动为您生成一个新Token。</p><p style="text-indent: 2em;">如果想找回之前的Token，请查看您的微信或支付宝付款记录，在商品名中有充值过的Token。</p><p style="text-indent: 2em;">如果您之前的Token绑定过QQ或微信，请直接访问<a href="http://tk.wanjuantiku.com/" target="_blank">题库官网</a>并使用绑定的账号登录，即可找回原Token。</p><p style="text-indent: 2em;">找回Token后请将Token复制到当前页面的Token输入框，然后点击保存按钮。</p><p style="text-indent: 2em;color:green;">为新Token绑定微信可以获得免费的100答题次数</p>')
                 }
             }
             wicButton.onclick = function () {
