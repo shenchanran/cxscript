@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.8.1
+// @version      2.8.2
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -2319,7 +2319,7 @@
             if (/^((?!chrome|android).)*safari/i.test($w.navigator.userAgent)) {
                 $layer("<center>此脚本不支持Safari浏览器<br>请mac/ipad用户<a href='https://www.microsoft.com/zh-cn/edge/download'>安装Microsoft Edge浏览器</a></center>")
             }
-            $layer(`<center><p>牢记脚本官网：<span style="color:blue;"><a href="http://f12.cx" target="_blank">f12.cx</a></span> 直接在浏览器访问</p><p>倍速刷视频会导致学习进度被清空</p><p>同账号多开脚本学习会导致学习进度被清空<p><p><a href="http://f12.cx/p-01.html" target="_blank">什么是清空？为什么会清空？</a></p><p><a href="https://greasyfork.cn/post/3" target="_blank">现已支持安卓端运行！</a></p><p><a href="https://greasyfork.cn/post/4" target="_blank">如何多开浏览器</a></p><p>脚本问题反馈群：<b>${$qqgroup}</b></p></center>`);
+            $layer(`<center><p>牢记脚本官网：<span style="color:blue;"><a href="http://f12.cx" target="_blank">f12.cx</a></span> 直接在浏览器访问</p><p>倍速刷视频会导致学习进度被清空</p><p>同账号多开脚本学习会导致学习进度被清空<p><p><a href="http://f12.cx/p-01.html" target="_blank">什么是清空？为什么会清空？</a></p><p>脚本问题反馈群：<b>${$qqgroup}</b></p></center>`);
             const doVideoButton = $d.querySelector('#doVideo'),
                 doDocumentButton = $d.querySelector('#doDocument'),
                 doWorkButton = $d.querySelector('#doWork'),
