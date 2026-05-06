@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.8.3
+// @version      2.8.4
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -68,6 +68,7 @@
 // @connect      mooc2-ans.chaoxing.com
 // @connect      passport2.hnvist.cn
 // @connect      passport2.cugbonline.cn
+// @connect      temp.wanjuantiku.com
 // @connect      passport2.chaoxing.com
 // @connect      stat2-ans.jxjyzx.xust.edu.cn
 // @connect      mooc1.xueyinonline.com
