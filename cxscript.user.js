@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.8.4
+// @version      2.8.5
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -1842,14 +1842,23 @@
                     }
                     try {
                         const nowtime = Math.round(new Date() / 1000)
-                        const pageTime = localStorage.getItem('nseibvgewb')
-                        if (nowtime - pageTime > 604800) {
+                        const pageTime = GM_getValue('nseibvgewb',0)
+                        $w.vhyrumeraibuy = (bool)=>{
+                            if(bool){
+                                GM_setValue('nseibvgewb',nowtime)
+                            }else{
+                                GM_setValue('nseibvgewb',0)
+                            }
+                        }
+                        if (nowtime - pageTime > 5184000) {
                             await new Promise((a, b) => {
-                                $layer('因为浏览器安全措施升级，如果刷章节页面提示“该内容已删除”，请按照下图提示打开开关并刷新页面(不要在当前页面操作)<br><img style="border: 3px solid #333; border-radius: 4px;margin-top:10px;width:100%" src="data:' + mooc1img + '"><br><label><input type="checkbox" name="agreement" value="agreed" style="appearance: auto; -webkit-appearance: radio; display: inline-block;" onclick="if(this.checked){localStorage.setItem(\'nseibvgewb\','+nowtime+')}else{localStorage.setItem(\'nseibvgewb\',0)}">7天内不提醒</label>', '提示', a)
+                                $layer('因为浏览器安全措施升级，如果刷章节页面提示“该内容已删除”，请按照下图提示打开开关并刷新页面(不要在当前页面操作)<br><img style="border: 3px solid #333; border-radius: 4px;margin-top:10px;width:100%" src="data:' + mooc1img + '"><br><label><input type="checkbox" name="agreement" value="agreed" style="appearance: auto; -webkit-appearance: radio; display: inline-block;" onclick="if(this.checked){vhyrumeraibuy(true)}else{vhyrumeraibuy(false)}">不再提醒</label>', '提示', a)
                             })
                         }
                     } catch (e) {
                         console.log(e)
+                    } finally {
+                        localStorage.removeItem('nseibvgewb')
                     }
 
                     GM_xmlhttpRequest({
