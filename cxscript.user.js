@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.8.5
+// @version      2.8.6
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -3886,7 +3886,7 @@
                     popup.setRestCount(tkResultJson.left)
                 }
                 if (tkResultJson.left < 1) {
-                    addLog('答题次数不足，答题自动暂停', 'red');
+                    addLog('答题次数不足，答题自动暂停，请先<a href="' + host + '?token=' + getTkToken() + '#2" target="_blank">点我充值</a>（充值后30秒内继续，如果没有继续，请刷新页面）', 'red');
                     while ($w.left < 1) {
                         ctk(getTkToken())
                         await sleep(10000);
