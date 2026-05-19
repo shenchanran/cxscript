@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.8.6
+// @version      2.8.7
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -53,6 +53,7 @@
 // @connect      passport2.jxjyzx.xust.edu.cn
 // @connect      passport2.zut.edu.cn
 // @connect      stat2-ans.wljx.hfut.edu.cn
+// @connect      task.chaoxing.com
 // @connect      tk.wanjuantiku.com
 // @connect      passport2.wljx.hfut.edu.cn
 // @connect      mooc1.hncj.edu.cn
@@ -89,6 +90,7 @@
 // @connect      mooc1.xynu.edu.cn
 // @connect      mooc1.ntu.edu.cn
 // @connect      stat2-ans.xynu.edu.cn
+// @connect      mobilelearn.chaoxing.com
 // @connect      stat2-ans.ntu.edu.cn
 // @connect      mooc1.hnvist.cn
 // @connect      stat2-ans.hnvist.cn
@@ -1842,12 +1844,12 @@
                     }
                     try {
                         const nowtime = Math.round(new Date() / 1000)
-                        const pageTime = GM_getValue('nseibvgewb',0)
-                        $w.vhyrumeraibuy = (bool)=>{
-                            if(bool){
-                                GM_setValue('nseibvgewb',nowtime)
-                            }else{
-                                GM_setValue('nseibvgewb',0)
+                        const pageTime = GM_getValue('nseibvgewb', 0)
+                        $w.vhyrumeraibuy = (bool) => {
+                            if (bool) {
+                                GM_setValue('nseibvgewb', nowtime)
+                            } else {
+                                GM_setValue('nseibvgewb', 0)
                             }
                         }
                         if (nowtime - pageTime > 5184000) {
@@ -2188,6 +2190,8 @@
                                 <a id="doDocument" class="btn btn-light">文档任务</a>
                                 &#160;|&#160;
                                 <a id="doNoMission" class="btn btn-light">非任务点</a>
+                                &#160;|&#160;
+                                <a id="doRenwu" class="btn btn-light">任务引擎</a>
                             </div>
                             <br /><br /><br />
                             <div class="title-weight" style="padding: 0; font-size: 20px; float: left">
@@ -2336,7 +2340,19 @@
                 startNewButton = $d.querySelector('#start_new'),
                 doNoMissionButton = $d.querySelector('#doNoMission'),
                 ciuuqButton = $d.querySelector('#ciuuq'),
-                wicButton = $d.querySelector('#wic');
+                wicButton = $d.querySelector('#wic'),
+                renwuyinqingButton = $d.querySelector('#doRenwu');
+            renwuyinqingButton.onclick = function () {
+                if ($w.chuangguan) {
+                    $w.logs.addLog('闯关模式下禁止操作', 'red');
+                    return;
+                }
+                let s = renwuyinqingButton.getAttribute('class').includes('light');
+                if(s){
+                    $layer('此功能仅支持“任务”列表中的“知识点”任务，如果你需要完成“测验”、“作业”任务，请回到上一界面，点击屏幕右上方的“回到旧版”，直接进入“考试”、“作业”页面作答。')
+                }
+                GM_setValue('doRenwu', (() => { return s && ((() => { renwuyinqingButton.setAttribute('class', 'btn btn-primary'); $w.logs.addLog('将会处理任务引擎', 'green'); return true; })()) || ((() => { renwuyinqingButton.setAttribute('class', 'btn btn-light'); $w.logs.addLog('将不会处理任务引擎', 'red'); return false; })()) })());
+            }
             doVideoButton.onclick = function () {
                 if ($w.chuangguan) {
                     $w.logs.addLog('闯关模式下禁止操作', 'red');
@@ -2459,6 +2475,7 @@
             autoSubmitButton.setAttribute('class', ['btn btn-light', 'btn btn-primary'][GM_getValue('autoSubmit', 1) + 0]);
             AIbutton.setAttribute('class', ['btn btn-light', 'btn btn-primary'][GM_getValue('doAI', 1) + 0]);
             doNoMissionButton.setAttribute('class', ['btn btn-light', 'btn btn-primary'][GM_getValue('doNoMission', 0) + 0]);
+            renwuyinqingButton.setAttribute('class', ['btn btn-light', 'btn btn-primary'][GM_getValue('doRenwu', 0) + 0]);
             $d.getElementById('tokenInput').value = tkToken;
             $d.getElementById('beisuInput').value = beisu;
             $d.getElementById('vgqtlv').value = vgqtlv;
@@ -2572,7 +2589,81 @@
                     return encData;
                 };
             $d.getElementById('detail').innerHTML = detailResult.responseText;
-            await sleep(1000);
+            if (GM_getValue('doRenwu', false)) {
+                logs.addLog('开始查询任务引擎');
+                let renwuyinqing = `https://mobilelearn.chaoxing.com/v2/apis/active/getData?DB_STRATEGY=DEFAULT&courseId=${courseId}&classId=${classId}`,
+                    renwu = await brequest({ 'url': renwuyinqing });
+                if (renwu) {
+                    try {
+                        for (let mission of renwu.data) {
+                            try {
+                                await sleep(200)
+                                let encryTaskUserId = await new Promise((a, b) => {
+                                    GM_xmlhttpRequest({
+                                        method: "HEAD",
+                                        url: `https://task.chaoxing.com/api/v1/middlePageApi/jumpStudyPlanList?taskId=${mission.id}&moocClassId=${classId}`,
+                                        onload: function (response) {
+                                            const url = new URL(response.finalUrl);
+                                            const params = url.searchParams;
+                                            const encryTaskUserId = params.get('encryTaskUserId')
+                                            a(encryTaskUserId)
+                                        },
+                                        onerror: function (err) {
+                                            a(false)
+                                        }
+                                    });
+                                })
+                                if (!encryTaskUserId) {
+                                    continue
+                                }
+                                let messionDetial = await brequest({ 'url': `https://task.chaoxing.com/userStudyPlan/getUserStandard?encryTaskUserId=${encryTaskUserId}` })
+                                if (!messionDetial) {
+                                    continue
+                                }
+                                for (let missionDetail of messionDetial.data.userTaskQualifyDTO.planUserBOList) {
+                                    try {
+                                        if (missionDetail?.plan?.planType == 1 && missionDetail?.finish == 0 && missionDetail?.plan?.externalDataId) {
+                                            await sleep(200)
+                                            let chapterId = await new Promise((a, b) => {
+                                                GM_xmlhttpRequest({
+                                                    method: "GET",
+                                                    url: `https://mooc2-ans.chaoxing.com/mooc2-ans/coursetopic/topicdetailsmiddle?taskEngine=true&courseid=${courseId}&clazzid=${classId}&cpi=${$s['cpi']}&topicid=${missionDetail.plan.externalDataId}&ut=s`,
+                                                    onload: function (response) {
+                                                        const url = new URL(response.finalUrl);
+                                                        const params = url.searchParams;
+                                                        const chapterId = params.get('chapterId')
+                                                        a(chapterId)
+                                                    },
+                                                    onerror: function (err) {
+                                                        a(false)
+                                                    }
+                                                });
+                                            })
+                                            if (!chapterId) {
+                                                continue
+                                            }
+                                            pointList.push(chapterId)
+                                        }
+                                    } catch (e) {
+                                        console.log(e)
+                                    }
+                                }
+                            } catch (e) {
+                                console.log(e)
+                            }
+                        }
+                    } catch (e) {
+                        logs.addLog('任务引擎解析错误');
+                    }
+                    if(pointList.length>0){
+                        logs.addLog(`共有${pointList.length}个任务引擎知识点任务`);
+                    }
+                } else {
+                    logs.addLog('任务引擎没有任务');
+                }
+            } else {
+                await sleep(1000);
+            }
             let divs = [...$d.getElementsByClassName('menulist-menu-title'), ...$d.getElementsByClassName('posCatalog_select'), ...$d.querySelectorAll('h5'), ...$d.querySelectorAll('h4'), ...$d.querySelectorAll('h3'), ...$d.querySelectorAll('h2')]//适配部分学校自建服务器
             for (let i = 0, l = divs.length; i < l; i++) {
                 if (!divs[i].id || !divs[i].id.includes('cur') || !divs[i].innerHTML) {//适配部分学校自建服务器，非任务点标签跳过
