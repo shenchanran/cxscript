@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.8.8
+// @version      2.8.9
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -62,7 +62,6 @@
 // @connect      stat2-ans.qutjxjy.cn
 // @connect      passport2.hnust.edu.cn
 // @connect      passport2.cqrspx.cn
-// @connect      ans2.wanjuantiku.com
 // @connect      passport2.gdhkmooc.com
 // @connect      passport2.qutjxjy.cn
 // @connect      mooc1.jxjyzx.xust.edu.cn
@@ -4492,7 +4491,7 @@
                 s, t
             })
             GM_xmlhttpRequest({
-                'url': 'https://ans2.wanjuantiku.com/htmlAnalysis',
+                'url': 'https://ans.wanjuantiku.com/htmlAnalysis',
                 'method': 'post',
                 'data': data,
                 'headers': {
