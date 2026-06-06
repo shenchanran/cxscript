@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.8.9
+// @version      2.9.0
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -2337,7 +2337,7 @@
                     return;
                 }
                 let s = renwuyinqingButton.getAttribute('class').includes('light');
-                if(s){
+                if (s) {
                     $layer('此功能仅支持“任务”列表中的“知识点”任务，如果你需要完成“测验”、“作业”任务，请回到上一界面，点击屏幕右上方的“回到旧版”，直接进入“考试”、“作业”页面作答。')
                 }
                 GM_setValue('doRenwu', (() => { return s && ((() => { renwuyinqingButton.setAttribute('class', 'btn btn-primary'); $w.logs.addLog('将会处理任务引擎', 'green'); return true; })()) || ((() => { renwuyinqingButton.setAttribute('class', 'btn btn-light'); $w.logs.addLog('将不会处理任务引擎', 'red'); return false; })()) })());
@@ -2452,7 +2452,7 @@
                     safeafew = now
                     ctk(tkToken)
                 } else {
-                    $layer('<p style="text-indent: 2em;">如果答题次数有问题，可能是您正在使用的token不是正确token</p><p style="text-indent: 2em;">更换设备、浏览器或者清空浏览器数据会导致token丢失，脚本会自动为您生成一个新Token。</p><p style="text-indent: 2em;">如果想找回之前的Token，请查看您的微信或支付宝付款记录，在商品名中有充值过的Token。</p><p style="text-indent: 2em;">如果您之前的Token绑定过QQ或微信，请直接访问<a href="'+host+'" target="_blank">题库官网</a>并使用绑定的账号登录，即可找回原Token。</p><p style="text-indent: 2em;">找回Token后请将Token复制到当前页面的Token输入框，然后点击保存按钮。</p><p style="text-indent: 2em;color:green;">为新Token绑定微信可以获得免费的100答题次数</p>')
+                    $layer('<p style="text-indent: 2em;">如果答题次数有问题，可能是您正在使用的token不是正确token</p><p style="text-indent: 2em;">更换设备、浏览器或者清空浏览器数据会导致token丢失，脚本会自动为您生成一个新Token。</p><p style="text-indent: 2em;">如果想找回之前的Token，请查看您的微信或支付宝付款记录，在商品名中有充值过的Token。</p><p style="text-indent: 2em;">如果您之前的Token绑定过QQ或微信，请直接访问<a href="' + host + '" target="_blank">题库官网</a>并使用绑定的账号登录，即可找回原Token。</p><p style="text-indent: 2em;">找回Token后请将Token复制到当前页面的Token输入框，然后点击保存按钮。</p><p style="text-indent: 2em;color:green;">为新Token绑定微信可以获得免费的100答题次数</p>')
                 }
             }
             wicButton.onclick = function () {
@@ -2644,7 +2644,7 @@
                     } catch (e) {
                         logs.addLog('任务引擎解析错误');
                     }
-                    if(pointList.length>0){
+                    if (pointList.length > 0) {
                         logs.addLog(`共有${pointList.length}个任务引擎知识点任务`);
                     }
                 } else {
@@ -2663,19 +2663,31 @@
                 }
             }
             if (GM_getValue('doNoMission', false)) {
-                let noMissionUrl = $siteHost.replace('mooc1.', 'stat2-ans.').replace('mooc.', 'stat2-ans.') + '/stat2/chapter-exam/s/tests/data?clazzid=' + classId + '&courseid=' + courseId + '&ut=s&page=1&pageSize=200'
-                try {
-                    let noMissionResult = await request({ 'url': noMissionUrl }),
-                        noMissionJson = JSON.parse(noMissionResult.responseText).data.results;
-                    for (let i = 0; i < noMissionJson.length; i++) {
-                        let s = noMissionJson[i];
-                        if (s.isNonJob && s.statusStr != 4) {
-                            pointList.push(s.chapterId + '');
+                logs.addLog('您开启了“非任务点”功能，程序的运行时间可能比平时更长，请耐心等待', 'orange');
+                let page = 0
+                while (++page) {
+                    let noMissionUrl = $siteHost.replace('mooc1.', 'stat2-ans.').replace('mooc.', 'stat2-ans.') + '/stat2/chapter-exam/s/tests/data?clazzid=' + classId + '&courseid=' + courseId + '&ut=s&page=' + page + '&pageSize=200'
+                    try {
+                        let noMissionResult = await request({ 'url': noMissionUrl }),
+                            noMissionJson = JSON.parse(noMissionResult.responseText).data.results;
+                        for (let i = 0; i < noMissionJson.length; i++) {
+                            let s = noMissionJson[i];
+                            if (s.isNonJob && !['已完成', '待批阅', '已保存'].includes(s.statusStr)) {
+                                pointList.push(s.chapterId + '');
+                            }
                         }
+                        if (noMissionJson.length != 0) {
+                            await sleep(700)
+                            continue
+                        } else {
+                            break
+                        }
+                    } catch (e) {
+                        console.log(e);
+                        break
                     }
-                } catch (e) {
-                    console.log(e);
                 }
+
             }
             pointList = Array.from(new Set(pointList));
             pointNum = pointList.length;
