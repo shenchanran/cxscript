@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.9.0
+// @version      2.9.1
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -35,6 +35,9 @@
 // @connect      mooc1-1.chaoxing.com
 // @connect      mooc1-api.chaoxing.com
 // @connect      zhibo.chaoxing.com
+// @connect      pstore-rk.chaoxing.com
+// @connect      kshlsplay-rk.chaoxing.com
+// @connect      ksrtmpplay-rk.chaoxing.com
 // @connect      mooc1.hnust.edu.cn
 // @connect      stat2-ans.hnust.edu.cn
 // @connect      stat2-ans.istudy.szpu.edu.cn
@@ -53,6 +56,7 @@
 // @connect      passport2.jxjyzx.xust.edu.cn
 // @connect      passport2.zut.edu.cn
 // @connect      stat2-ans.wljx.hfut.edu.cn
+// @connect      live-rk.chaoxing.com
 // @connect      task.chaoxing.com
 // @connect      tk.wanjuantiku.com
 // @connect      passport2.wljx.hfut.edu.cn
@@ -76,11 +80,15 @@
 // @connect      passport2.ecnusole.com
 // @connect      stat2-ans.xueyinonline.com
 // @connect      ans.wanjuantiku.com
+// @connect      static-rk.chaoxing.com
 // @connect      passport2.xueyinonline.com
+// @connect      lbapi-rk.chaoxing.com
 // @connect      mooc1.cqrspx.cn
 // @connect      stat2-ans.cqrspx.cn
+// @connect      f1-rk.chaoxing.com
 // @connect      mooc1-2.chaoxing.com
 // @connect      mooc1.ynny.cn
+// @connect      mqtt7-rk.chaoxing.com
 // @connect      stat2-ans.ynny.cn
 // @connect      mooc1.cugbonline.cn
 // @connect      stat2-ans.cugbonline.cn
@@ -2368,7 +2376,7 @@
             }
             AIbutton.onclick = function () {
                 if (!$w['AIwarning']) {
-                    $layer('<center><p>AI答题目前为测试功能</p><p>目前只支持章节测试的AI答题<p><p>不保证AI作答的成绩</p><p>只适用于补充题库没查到的题</p><p>建议关闭自动提交，作答完成后人工检查</p><p>脚本问题反馈群：<b>' + $qqgroup + '</b></p></center>');
+                    $layer('<center><p>AI答题目前为测试功能</p><p>不保证AI作答的成绩</p><p>只适用于补充题库没查到的题</p><p>建议关闭自动提交，作答完成后人工检查</p><p>脚本问题反馈群：<b>' + $qqgroup + '</b></p></center>');
                     $w['AIwarning'] = true;
                 }
                 let s = AIbutton.getAttribute('class').includes('light');
@@ -2516,7 +2524,7 @@
                             const match = res.responseText.match(regex)
                             if (match) {
                                 videoV = match[1]
-                                console.log(videoV)
+                                // console.log(videoV)
                             } else {
                                 console.log(res.responseText)
                             }
@@ -3483,7 +3491,23 @@
                                             break;
                                         }
                                         logs.addLog('开始直播任务：' + jobData.property.title)
-                                        let liveUrl = $protocol + $w.location.host + '/ananas/live/liveinfo?liveid=' + jobData.property['liveId'] + '&userid=' + $uid + '&clazzid=' + classId + '&knowledgeid=' + chapterId + '&courseid=' + courseId + '&jobid=' + jobData.jobid + '&ut=s',
+                                        let oldLiveId = liveId = jobData.property['liveId']
+                                        if (liveId.toString().length < 16) {
+                                            let newIdResult = await request({
+                                                'url': '/ananas/live/getnewliveid?oliveid=' + liveId,
+                                            })
+                                            if (!newIdResult) {
+                                                logs.addLog('获取直播信息失败，请联系作者反馈', 'red');
+                                                break;
+                                            }
+                                            newIdResult = JSON.parse(newIdResult.responseText.replaceAll('\'', '"'));
+                                            if (!newIdResult.newLiveId) {
+                                                logs.addLog('获取直播信息失败，请联系作者反馈', 'red');
+                                                break;
+                                            }
+                                            liveId = newIdResult.newLiveId
+                                        }
+                                        let liveUrl = $protocol + $w.location.host + '/ananas/live/liveinfo?liveid=' + liveId + '&userid=' + $uid + '&clazzid=' + classId + '&knowledgeid=' + chapterId + '&courseid=' + courseId + '&jobid=' + jobData.jobid + '&ut=s',
                                             liveInfo = await request({
                                                 'url': liveUrl
                                             }),
@@ -3493,49 +3517,123 @@
                                             break;
                                         }
                                         liveInfo = JSON.parse(liveInfo.responseText);
-                                        let duration = liveInfo['temp']['data']['duration'],
-                                            timeLongValue = liveInfo['temp']['data']['timeLongValue'] * 60,
-                                            liveStatus = liveInfo['temp']['data']['liveStatus'],
+                                        let liveStatus = liveInfo['temp']['data']['liveStatus'],
                                             ifReview = liveInfo['temp']['data']['ifReview'];
                                         if (liveStatus == 4 && ifReview == 1) {
                                             logs.addLog('直播不允许回看，无法完成', 'orange');
                                             break;
                                         }
-                                        let indexUrl = $protocol + 'zhibo.chaoxing.com/' + jobData.property['liveId'] + '?courseId=' + courseId + '&classId=' + classId + '&knowledgeId=' + chapterId + '&jobId=' + jobData.jobid + '&userId=' + $uid + '&rt=' + rt + '&livesetenc=' + jobData['liveSetEnc'] + '&isjob=true&watchingInCourse=1&customPara1=' + classId + '_' + courseId + '&customPara2=' + jobData['authEnc'] + '&isNotDrag=1&jobfs=0';
-                                        await request({
-                                            'url': indexUrl
+                                        let href = $protocol + "zhibo.chaoxing.com/" + liveId + "?courseId=" + courseId + "&classId=" + classId + "&knowledgeId=" + chapterId
+                                            + "&jobId=" + jobData.jobid + "&userId=" + $uid + "&rt=" + rt + "&livesetenc=" + jobData.liveSetEnc + "&isjob=1&watchingInCourse=1&customPara1="
+                                            + classId + "_" + courseId + "&customPara2=" + jobData.authEnc + "&jobfs=0&isNotDrag=" + jobData.isNotDrag + "&livedragenc=" + jobData.liveDragEnc + "&sw=1&ds=0&liveswdsenc=" + jobData.liveSwDsEnc
+                                        let liveResult = await request({
+                                            'url': href
+                                        });
+                                        if (!liveResult) {
+                                            logs.addLog('获取直播详情失败，请联系作者反馈', 'orange');
+                                            break;
+                                        }
+                                        if (!liveResult.responseText.includes('lineVideo =')) {
+                                            logs.addLog('获取直播详情失败1，请联系作者反馈', 'orange');
+                                            break;
+                                        }
+                                        let lineinfoREGX = liveResult.responseText.match(/var\s*lineVideo\s*=\s+(.*?});\s*var/);
+                                        let videoPlayStartTimeREGX = liveResult.responseText.match(/var\s*videoPlayStartTime\s*=\s*([0-9]{1,4});/);
+                                        let viewerUrlREGX = liveResult.responseText.match(/var\s*viewerUrl\s*=\s*('|")(.*?)('|");/);
+                                        let uInfoREGX = liveResult.responseText.match(/var\s*uInfo\s*=\s*('|")([0-9a-z]{32})('|");/);
+                                        if (!lineinfoREGX || !lineinfoREGX[1] || !videoPlayStartTimeREGX || !videoPlayStartTimeREGX[1] || !viewerUrlREGX || !viewerUrlREGX[2] || !uInfoREGX || !uInfoREGX[2]) {
+                                            logs.addLog('获取直播详情失败2，请联系作者反馈', 'orange');
+                                            break;
+                                        }
+                                        let oldLiveIdREGX = liveResult.responseText.match(/data\s*:\s*{\s*"liveId"\s*:\s*([0-9]{4,50})\s*,/);
+                                        if (oldLiveIdREGX && oldLiveIdREGX[1]) {
+                                            oldLiveId = oldLiveIdREGX[1]
+                                        }
+                                        let uInfo = uInfoREGX[2]
+                                        let lineinfo = JSON.parse(lineinfoREGX[1].replaceAll('\'', '"'))
+                                        let playTime = Number(videoPlayStartTimeREGX[1])
+                                        let viewerUrl = viewerUrlREGX[2]
+                                        let duration = Number(lineinfo.videoLongtime)
+                                        function delUrlParam(url, name) {
+                                            if (!url) {
+                                                return "";
+                                            }
+                                            var urlArr = url.split('?');
+                                            if (urlArr.length > 1 && urlArr[1].indexOf(name) > -1) {
+                                                try {
+                                                    var query = urlArr[1];
+                                                    var obj = {}
+                                                    var arr = query.split("&");
+                                                    for (var i = 0; i < arr.length; i++) {
+                                                        arr[i] = arr[i].split("=");
+                                                        obj[arr[i][0]] = arr[i][1];
+                                                    };
+                                                    delete obj[name];
+                                                    var urlte = urlArr[0] + '?' + JSON.stringify(obj).replace(/[\"\{\}]/g, "").replace(/\:/g, "=").replace(/\,/g, "&");
+                                                    return urlte;
+                                                } catch (e) {
+                                                    return url;
+                                                }
+                                            }
+                                        }
+                                        let viewhref = delUrlParam(viewerUrl, "watchMoment") + "&watchMoment=" + playTime;
+                                        let viewResult = await request({
+                                            'url': viewhref
                                         });
                                         if (rt <= 0.9) {
                                             duration = duration * (rt + 0.1);
                                         }
-                                        if (timeLongValue > duration) {
-                                            logs.addLog('直播时长已达标，无需继续观看：' + jobData['property']['title'])
-                                            break;
-                                        }
-                                        else {
-                                            duration -= timeLongValue;
-                                        }
                                         let isStart = '0',
-                                            playTime = 0,
-                                            lreportUrl, reportR;
+                                            lreportUrl, reportR, lreportUrl2, reportZ;
                                         updateBar(0);
                                         nowBar = 0;
                                         barr = setInterval(function () {
                                             nowBar += 10;
                                             updateBar(Math.round(nowBar / duration * 100));
                                         }, 10000);
+                                        await sleep(800)
+                                        await request({
+                                            headers: {
+                                                "Referer": href
+                                            },
+                                            'url': 'https://zhibo.chaoxing.com/userLog/recordAction?operate=%E5%85%89%E6%A0%87%E8%BF%9B%E5%85%A5'
+                                        });
+                                        await sleep(1123)
+                                        let jiba = 1
+                                        let watchMoment
                                         while (playTime <= duration) {
-                                            lreportUrl = $protocol + 'zhibo.chaoxing.com/saveTimePc?streamName=' + jobData['property']['streamName'] + '&vdoid=' + jobData['property']['vdoid'] + '&userId=' + $uid + '&isStart=' + isStart + '&t=' + Date.now() + '&courseId=' + courseId;
+                                            lreportUrl = $protocol + 'zhibo.chaoxing.com/saveTimePc?userId=' + $uid + '&courseId=' + courseId + '&streamName=' + jobData['property']['streamName'] + '&vdoid=' + jobData['property']['vdoid'] + '&isStart=' + isStart;
                                             isStart = '1';
                                             reportR = await request({
+                                                headers: {
+                                                    "Referer": href
+                                                },
                                                 'url': lreportUrl
                                             });
-                                            if (reportR.responseText.includes('success')) {
-                                                logs.addLog('观看进度上报成功：' + jobData.property.title)
+                                            if (liveStatus == 4) {
+                                                watchMoment = playTime + +Math.random().toFixed(5)
+                                                lreportUrl2 = $protocol + 'zhibo.chaoxing.com/apis/live/put/watchMoment?liveId=' + oldLiveId + '&streamName=' + jobData['property']['streamName'] + '&vdoid=' + jobData['property']['vdoid'] + '&watchMoment=' + watchMoment + '&t=' + new Date().getTime() + '&u=' + uInfo
+                                                reportZ = await request({
+                                                    headers: {
+                                                        "Referer": href
+                                                    },
+                                                    'url': lreportUrl2
+                                                });
+                                            } else {
+                                                reportZ = true
+                                            }
+                                            if (reportR.responseText.includes('success') && (reportZ || reportZ.responseText.includes('请求成功'))) {
+                                                if (jiba) {
+                                                    logs.addLog(`${jobData.property.title}：已观看${(playTime / 60).toFixed(1)}分钟`)
+                                                    jiba = 0
+                                                } else {
+                                                    jiba = 1
+                                                }
+
                                             } else {
                                                 logs.addLog('观看进度上报失败：' + jobData.property.title, 'red')
                                             }
-                                            if (playTime == duration) {
+                                            if (playTime >= duration) {
                                                 clearInterval(barr);
                                                 logs.addLog('直播回放完成：' + jobData.property.title)
                                                 break
