@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.9.2
+// @version      2.9.3
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -3586,8 +3586,6 @@
                                             }
                                             break;
                                         } else {
-
-
                                             let lineinfoREGX = liveResult.responseText.match(/var\s*lineVideo\s*=\s+(.*?});\s*var/);
                                             let videoPlayStartTimeREGX = liveResult.responseText.match(/var\s*videoPlayStartTime\s*=\s*([0-9]{1,4});/);
                                             let viewerUrlREGX = liveResult.responseText.match(/var\s*viewerUrl\s*=\s*('|")(.*?)('|");/);
@@ -3605,6 +3603,9 @@
                                             let playTime = Number(videoPlayStartTimeREGX[1])
                                             let viewerUrl = viewerUrlREGX[2]
                                             let duration = Number(lineinfo.videoLongtime)
+                                            if(duration<10){
+                                                duration = liveInfo['temp']['data']['duration']
+                                            }
                                             function delUrlParam(url, name) {
                                                 if (!url) {
                                                     return "";
