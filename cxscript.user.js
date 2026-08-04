@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.9.3
+// @version      2.9.4
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -42,6 +42,9 @@
 // @connect      stat2-ans.hnust.edu.cn
 // @connect      stat2-ans.istudy.szpu.edu.cn
 // @connect      stat2-ans.chaoxing.com
+// @connect      stat2-ans.wht.zjelib.cn
+// @connect      mooc1.wht.zjelib.cn
+// @connect      passport2.wht.zjelib.cn
 // @connect      mooc1.hnsyu.net
 // @connect      passport2.xust.edu.cn
 // @connect      stat2-ans.hnsyu.net
@@ -1615,9 +1618,19 @@
         }, 1000)
     }
     // 章节主页，在此页面显示导航弹窗
-    if ($l.includes('/mycourse/stu?') || ($l.includes('mycourse/studentcourse?') && $w.top == $w)) {
+    if ($l.includes('/mycourse/stu?') || $l.includes('mycourse/studentcourse?')) {
         let newVersion = true
         if ($l.includes('mycourse/studentcourse?')) {
+            if ($w.top != $w) {
+                try {
+                    void window.top.location.href;
+                    return false;
+                } catch (error) {
+                    if (error?.name !== 'SecurityError') {
+                        return true;
+                    }
+                }
+            }
             if (GM_getValue('directToWork', false)) {
                 GM_setValue('directToWork', false)
                 const workButton = $d.querySelector('.workTip')
@@ -1877,16 +1890,16 @@
                         onload: function (response) {
                             // 如果状态码在200-299之间，说明HTTPS正常
                             if (response.status >= 200 && response.status < 300) {
-                                window.location.href = jumpUrl
+                                window.top.location.href = jumpUrl
                             } else {
-                                window.location.href = jumpUrl.replace('https://', 'http://')
+                                window.top.location.href = jumpUrl.replace('https://', 'http://')
                             }
                         },
                         onerror: function (err) {
-                            window.location.href = jumpUrl.replace('https://', 'http://')
+                            window.top.location.href = jumpUrl.replace('https://', 'http://')
                         },
                         ontimeout: function () {
-                            window.location.href = jumpUrl.replace('https://', 'http://')
+                            window.top.location.href = jumpUrl.replace('https://', 'http://')
                         }
                     });
                 })
@@ -3603,7 +3616,7 @@
                                             let playTime = Number(videoPlayStartTimeREGX[1])
                                             let viewerUrl = viewerUrlREGX[2]
                                             let duration = Number(lineinfo.videoLongtime)
-                                            if(duration<10){
+                                            if (duration < 10) {
                                                 duration = liveInfo['temp']['data']['duration']
                                             }
                                             function delUrlParam(url, name) {
