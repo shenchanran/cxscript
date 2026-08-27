@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.9.4
+// @version      2.9.5
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -1620,16 +1620,15 @@
     // 章节主页，在此页面显示导航弹窗
     if ($l.includes('/mycourse/stu?') || $l.includes('mycourse/studentcourse?')) {
         let newVersion = true
+        let nowTime = Math.round(new Date() / 1000)
+        if ($l.includes('/mycourse/stu?')) {
+            GM_setValue('cross_origin_check', nowTime)
+        }
         if ($l.includes('mycourse/studentcourse?')) {
-            if ($w.top != $w) {
-                try {
-                    void window.top.location.href;
-                    return false;
-                } catch (error) {
-                    if (error?.name !== 'SecurityError') {
-                        return true;
-                    }
-                }
+            let cross_origin_check = GM_getValue('cross_origin_check', 0)
+            GM_setValue('cross_origin_check', 0)
+            if ($w.top != $w && nowTime - cross_origin_check < 3) {
+                return true
             }
             if (GM_getValue('directToWork', false)) {
                 GM_setValue('directToWork', false)
