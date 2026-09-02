@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.9.5
+// @version      2.9.6
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -61,6 +61,7 @@
 // @connect      stat2-ans.wljx.hfut.edu.cn
 // @connect      live-rk.chaoxing.com
 // @connect      task.chaoxing.com
+// @connect      k.chaoxing.com
 // @connect      tk.wanjuantiku.com
 // @connect      passport2.wljx.hfut.edu.cn
 // @connect      mooc1.hncj.edu.cn
@@ -1319,6 +1320,7 @@
                     <div class="modal-content">
                         <div class="modal-title">超星学习通九九助手</div>
                         <p>您可能是第一次使用此脚本，此脚本答题需要连接题库，请选择您登陆题库的方式</p>
+                        <p>QQ交流群：${$qqgroup}</p>
                         <div class="modal-buttons">
                             <button id="weChatBinddddd">微信登录(赠送100次)</button>
                             <button id="randomGGG">随机生成Token</button>
@@ -2204,17 +2206,19 @@
                                 <a id="doVideo" class="btn btn-light">视频任务</a>
                                 &#160;|&#160;
                                 <a id="doWork" class="btn btn-light">章节测试</a>&#160;
-                                <a id="AI" class="btn btn-light">AI答题</a>
                                 &#160;|&#160;
                                 <a id="doDocument" class="btn btn-light">文档任务</a>
                                 &#160;|&#160;
-                                <a id="doNoMission" class="btn btn-light">非任务点</a>
+                                <a id="doLive" class="btn btn-light">直播任务</a>
                                 &#160;|&#160;
                                 <a id="doRenwu" class="btn btn-light">任务引擎</a>
+                                &#160;|&#160;
+                                <a id="doNoMission" class="btn btn-light">非任务点</a>
                             </div>
                             <br /><br /><br />
                             <div class="title-weight" style="padding: 0; font-size: 20px; float: left">
                                 章节测试：<a id="autoSubmit" class="btn btn-light">自动提交</a>
+                                <a id="AI" class="btn btn-light">AI答题</a>&nbsp;&nbsp;
                                 &nbsp;&nbsp;总开关：<a id="start" class="btn btn-success">点我启动</a>
                                 &#160;|&#160;<a id='start_new' class="btn btn-outline-danger">闯关模式</a>&#160;<a
                                     id="wic">什么是闯关模式？</a>
@@ -2342,6 +2346,7 @@
             const doVideoButton = $d.querySelector('#doVideo'),
                 doDocumentButton = $d.querySelector('#doDocument'),
                 doWorkButton = $d.querySelector('#doWork'),
+                doLiveButton = $d.querySelector('#doLive'),
                 autoSubmitButton = $d.querySelector('#autoSubmit'),
                 saveConfigButton = $d.querySelector('#saveConfig'),
                 AIbutton = $d.querySelector('#AI'),
@@ -2385,6 +2390,14 @@
                 }
                 let s = doWorkButton.getAttribute('class').includes('light');
                 GM_setValue('doWork', (() => { return s && ((() => { doWorkButton.setAttribute('class', 'btn btn-primary'); $w.logs.addLog('将会处理章节测试任务', 'green'); return true; })()) || ((() => { doWorkButton.setAttribute('class', 'btn btn-light'); $w.logs.addLog('将不会处理章节测试任务', 'red'); return false; })()) })());
+            }
+            doLiveButton.onclick = function () {
+                if ($w.chuangguan && GM_getValue('doLive', false)) {
+                    $w.logs.addLog('闯关模式下禁止操作', 'red');
+                    return;
+                }
+                let s = doLiveButton.getAttribute('class').includes('light');
+                GM_setValue('doLive', (() => { return s && ((() => { doLiveButton.setAttribute('class', 'btn btn-primary'); $w.logs.addLog('将会处理直播任务', 'green'); return true; })()) || ((() => { doLiveButton.setAttribute('class', 'btn btn-light'); $w.logs.addLog('将不会处理直播任务', 'red'); return false; })()) })());
             }
             AIbutton.onclick = function () {
                 if (!$w['AIwarning']) {
@@ -2454,6 +2467,8 @@
                 GM_setValue('doVideo', true);
                 GM_setValue('doDocument', true);
                 GM_setValue('doWork', true);
+                GM_setValue('doLive', true);
+                GM_setValue('autoSubmit', 1)
                 $w.logs.addLog('视频、文档、章节测试任务已开启，如需重置，请刷新页面', 'green');
                 startNewButton.setAttribute('class', 'btn btn-light');
                 startNewButton.innerHTML = startButton.innerHTML = '闯关任务已启动';
@@ -2477,7 +2492,17 @@
             }
             wicButton.onclick = function () {
                 $layer('<p style="text-indent: 2em;">如果您的课程章节学完一节才能解锁下一节，不能跳过，那么这门课就是闯关模式，必须点击闯关模式按钮才能进行刷课</p>')
-            }
+            };
+            (['doVideo', 'doDocument', 'doWork', 'autoSubmit', 'doAI', 'doLive']).forEach((item, index, array) => {
+                if(GM_getValue(item,666)===666){
+                    GM_setValue(item,1)
+                }
+            });
+            (['doRenwu', 'doNoMission']).forEach((item, index, array) => {
+                if(GM_getValue(item,666)===666){
+                    GM_setValue(item,0)
+                }
+            });
             doVideoButton.setAttribute('class', ['btn btn-light', 'btn btn-primary'][GM_getValue('doVideo', 1) + 0]);
             doDocumentButton.setAttribute('class', ['btn btn-light', 'btn btn-primary'][GM_getValue('doDocument', 1) + 0]);
             doWorkButton.setAttribute('class', ['btn btn-light', 'btn btn-primary'][GM_getValue('doWork', 1) + 0]);
@@ -2485,6 +2510,7 @@
             AIbutton.setAttribute('class', ['btn btn-light', 'btn btn-primary'][GM_getValue('doAI', 1) + 0]);
             doNoMissionButton.setAttribute('class', ['btn btn-light', 'btn btn-primary'][GM_getValue('doNoMission', 0) + 0]);
             renwuyinqingButton.setAttribute('class', ['btn btn-light', 'btn btn-primary'][GM_getValue('doRenwu', 0) + 0]);
+            doLiveButton.setAttribute('class', ['btn btn-light', 'btn btn-primary'][GM_getValue('doLive', 1) + 0]);
             $d.getElementById('tokenInput').value = tkToken;
             $d.getElementById('beisuInput').value = beisu;
             $d.getElementById('vgqtlv').value = vgqtlv;
@@ -2814,7 +2840,7 @@
                                 loopType:
                                 switch (jobData.type) {
                                     case 'video':
-                                        if (!GM_getValue('doVideo', true)) {
+                                        if (!GM_getValue('doVideo', false)) {
                                             logs.addLog('跳过任务：' + jobData.property.name, 'red');
                                             break;
                                         }
@@ -3007,7 +3033,7 @@
                                             await sleep(60000);
                                         }
                                     case 'document':
-                                        if (!GM_getValue('doDocument', true)) {
+                                        if (!GM_getValue('doDocument', false)) {
                                             logs.addLog('跳过任务：' + jobData.property.name, 'red');
                                             break;
                                         }
@@ -3039,7 +3065,7 @@
                                             break;
                                         }
                                     case 'workid':
-                                        if (!GM_getValue('doWork', true)) {
+                                        if (!GM_getValue('doWork', false)) {
                                             logs.addLog('跳过任务：' + jobData.property.title, 'red');
                                             break;
                                         }
@@ -3442,7 +3468,7 @@
                                         await sleep($n(2, 4));
                                         break;
                                     case 'book':
-                                        if (!GM_getValue('doDocument', true)) {
+                                        if (!GM_getValue('doDocument', false)) {
                                             logs.addLog('跳过任务：' + jobData.property.name, 'red');
                                             break;
                                         }
@@ -3470,7 +3496,7 @@
                                             break;
                                         }
                                     case 'hyperlink':
-                                        if (!GM_getValue('doDocument', true)) {
+                                        if (!GM_getValue('doDocument', false)) {
                                             logs.addLog('跳过任务：' + jobData.property.title, 'red');
                                             break;
                                         }
@@ -3498,7 +3524,7 @@
                                             break;
                                         }
                                     case 'live':
-                                        if (!GM_getValue('doVideo', true)) {
+                                        if (!GM_getValue('doLive', false)) {
                                             logs.addLog('跳过直播任务：' + jobData.property.title, 'red');
                                             break;
                                         }
@@ -3711,7 +3737,7 @@
                                             break;
                                         }
                                     case 'microCourse':
-                                        if (!GM_getValue('doDocument', true)) {
+                                        if (!GM_getValue('doDocument', false)) {
                                             logs.addLog('跳过任务：' + jobData.property.title, 'red');
                                             break;
                                         }
@@ -3730,6 +3756,100 @@
                                             console.log(domicroCoursResult)
                                             logs.addLog('速课任务失败：' + jobData.property.title, 'green');
                                         }
+                                        break
+                                    case 'chaoxingClass':
+                                        //纯手写代码，兄弟，有没有含金量
+                                        if (!GM_getValue('doLive', false)) {
+                                            logs.addLog('跳过课堂直播任务：' + jobData.property.title, 'red');
+                                            break;
+                                        }
+                                        logs.addLog('开始课堂直播任务：' + jobData.property.title)
+                                        let uuid = jobData.property.uuid
+                                        let classDetial = await request({
+                                            'url': 'https://k.chaoxing.com/apis/chapter/getMeetReview4Job?crossOrigin=true&uuid=' + uuid
+                                        });
+                                        if (!classDetial) {
+                                            logs.addLog('获取课堂直播失败：' + jobData.property.title, 'red');
+                                            break;
+                                        }
+                                        let dataKey
+                                        let duration
+                                        let userTime
+                                        let percent
+                                        try {
+                                            percent = Number(jobData.property['percent'] ?? 95) + 5
+                                            if (percent > 100) {
+                                                percent = 100
+                                            }
+                                            let classJson = JSON.parse(classDetial.responseText);
+                                            dataKey = classJson.data[0].dataKey
+                                            duration = classJson.data[0].duration
+                                            userTime = classJson.data[0].userTime
+                                        } catch (e) {
+                                            console.log(e)
+                                            logs.addLog('解析课堂直播内容失败：' + jobData.property.title, 'red');
+                                            break;
+                                        }
+                                        duration = Math.round(duration * percent / 100)
+                                        if (!dataKey) {
+                                            logs.addLog('解析课堂直播内容错误：' + jobData.property.title, 'red');
+                                            break;
+                                        }
+                                        if (duration <= 10) {
+                                            logs.addLog('此任务有问题，请手动检查：' + jobData.property.title, 'red');
+                                            break;
+                                        }
+                                        if (duration - userTime < 10) {
+                                            userTime = duration - 120
+                                        }
+                                        let stop = false
+                                        let a = 0
+                                        let errTime = 0
+                                        do {
+                                            userTime += 10
+                                            if (userTime >= duration) {
+                                                userTime = duration
+                                                stop = true
+                                            }
+                                            try {
+                                                updateBar(Math.round(userTime / duration * 100))
+                                            } catch (e) {
+                                                console.log(e)
+                                            }
+                                            let sendUrl = `https://k.chaoxing.com/apis/chapter/addReviewDot4Job?crossOrigin=true&uuid=${uuid}&dataKey=${dataKey}&lastWatchTime=${userTime}`
+                                            let watchResult = await request({
+                                                headers: {
+                                                    'Referer': `https://k.chaoxing.com/res/look/index.html?uuid=${uuid}&_t=202311241720`,
+                                                    'Sec-Fetch-Site': 'same-origin'
+                                                },
+                                                url: sendUrl
+                                            })
+                                            if (!watchResult) {
+                                                errTime++
+                                                if (errTime >= 4) {
+                                                    logs.addLog('请求失败三次，请检查网络或联系客服' + jobData.property.title, 'red');
+                                                    break loopType;
+                                                } else {
+                                                    userTime -= 10
+                                                    logs.addLog('请求失败，将在10秒后重试' + jobData.property.title, 'orange');
+                                                }
+                                            } else {
+                                                let watchResultJson = JSON.parse(watchResult.responseText);
+                                                if (watchResultJson.result && watchResultJson.msg == 'success') {
+                                                    if (stop) {
+                                                        logs.addLog('课堂直播回放完成：' + jobData.property.title)
+                                                    } else if (a % 6 == 0) {
+                                                        logs.addLog(`课堂直播已观看：${Math.round(userTime / 60)}分钟，剩余${Math.round((duration - userTime) / 60)}分钟：` + jobData.property.title);
+                                                    }
+                                                } else {
+                                                    logs.addLog('服务器返回奇怪信息，你可以无视，如果奇怪信息看起来比较严重，请截图反馈客服' + watchResult.responseText);
+                                                }
+                                            }
+                                            a++
+                                            if (stop == false) {
+                                                await sleep(10000)
+                                            }
+                                        } while (stop == false)
                                         break
                                     default:
                                         logs.addLog('暂不支持的任务类型：' + jobData.type);
@@ -3768,16 +3888,20 @@
     }
     // 整卷预览页面,在此页面作答
     else if ($l.includes('ans/mooc2/exam/preview')) {
-        // const removeMask = setInterval(function () {
-        //     const masks = [...document.querySelectorAll('.mask_div')]
-        //     if (masks.length < 1) {
-        //         clearInterval(removeMask)
-        //         return
-        //     }
-        //     masks.forEach(e => {
-        //         e.remove()
-        //     })
-        // }, 1000)
+        try{
+            const removeMask = setInterval(function () {
+            const masks = [...document.querySelectorAll('.mask_div')]
+            if (masks.length < 1) {
+                clearInterval(removeMask)
+                return
+            }
+            masks.forEach(e => {
+                e.remove()
+            })
+        }, 1000)
+        }catch(e){
+            console.log(e);
+        }
         let host = hostList[0]
         let token
         const popup = new PopupTool()
