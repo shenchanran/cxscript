@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.9.6
+// @version      2.9.7
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -117,8 +117,8 @@
 // @compatible chrome
 // @compatible edge
 // @supportURL https://tk.wanjuantiku.com/
-// @downloadURL https://greasyfork.cn/scripts/cxscript.user.js
-// @updateURL https://greasyfork.cn/scripts/cxscript.meta.js
+// @downloadURL https://f12.cx/cxscript.user.js
+// @updateURL https://f12.cx/cxscript.meta.js
 // ==/UserScript==
 !!(async function () {
     const
@@ -1620,8 +1620,18 @@
         }, 1000)
     }
     // 章节主页，在此页面显示导航弹窗
+    // /mooc2-ans/mycourse/stu? 新版页面课程首页
+    // /mooc2-ans/mycourse/studentcourse? 新版页面章节列表（被嵌套）
+    // /mycourse/studentcourse? 旧版章节首页（有可能被嵌套）
+    // /mooc2-ans-vue/fanyav3/? 泛雅章节首页，内部嵌套新版页面章节列表
+    // 需求：新版页面课程首页、新版页面章节列表 旧版章节首页 都显示脚本弹窗，但嵌套情况不重复弹窗，嵌套可能跨域。
+    // 下方代码可运行，但是newVersion判断方式有小问题（已修复），决定不优化弹窗方式，直接在newVersion上面打补丁
     if ($l.includes('/mycourse/stu?') || $l.includes('mycourse/studentcourse?')) {
+        //判断是否为旧版页面最稳妥的办法就是url里面有没有包含/mooc2-ans
         let newVersion = true
+        if(!$l.includes('/mooc2-ans')){
+            newVersion = false
+        }
         let nowTime = Math.round(new Date() / 1000)
         if ($l.includes('/mycourse/stu?')) {
             GM_setValue('cross_origin_check', nowTime)
@@ -1665,7 +1675,6 @@
                 }
                 return
             }
-            newVersion = false
         } else {
             setTimeout(() => {
                 let hosts = window.location.href.match(/https:\/\/webvpn\.(.*?)\/https\/[0-9a-z]+\//)
