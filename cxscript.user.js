@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.9.7
+// @version      2.9.8
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -51,6 +51,8 @@
 // @connect      scriptcat.cn
 // @connect      passport2.hnsyu.net
 // @connect      mooc1.gdhkmooc.com
+// @connect      mooc.jxzsxx.jxrtvu.com
+// @connect      stat2-ans.jxzsxx.jxrtvu.com
 // @connect      stat2-ans.gdhkmooc.com
 // @connect      mooc1.zut.edu.cn
 // @connect      passport2.hncj.edu.cn
@@ -1709,9 +1711,9 @@
         }
         div.setAttribute("id", "skpannel")
         if (/Android/i.test(navigator.userAgent) && !/Edg/i.test(navigator.userAgent)) {
-            let a = confirm('【超星学习通九九助手】\n\n您可能正在使用手机浏览器\n我们不保证脚本能正常运行\n也不保证学习成绩\n建议使用edge手机端浏览器\n点击确定查看详细教程、点击取消关闭此窗口')
+            let a = confirm('【超星学习通九九助手】\n\n您可能正在使用手机浏览器\n我们不保证脚本能正常运行\n也不保证学习成绩\n建议使用edge手机端浏览器\n点击确定前往下载、点击取消关闭此窗口')
             if (a) {
-                $w.location.href = 'https://greasyfork.cn/post/3'
+                $w.location.href = 'https://f12.cx/#edge'
             }
         } else if (/EdgA/i.test(navigator.userAgent)) {
             alert('【超星学习通九九助手】\n\n您可能正在使用edge手机浏览器\n我们不保证脚本能在后台正常挂机\n不同手机的后台策略不同，可能在您回到桌面后会自动暂停\n如遇问题请刷新页面或更换为电脑浏览器')
