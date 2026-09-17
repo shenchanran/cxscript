@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.9.8
+// @version      2.9.9
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -3863,7 +3863,7 @@
                                         } while (stop == false)
                                         break
                                     default:
-                                        logs.addLog('暂不支持的任务类型：' + jobData.type);
+                                        logs.addLog('暂不支持的任务类型：' + (jobData?.type||jobData?.property?.module));
                                 }
                             } catch (e) {
                                 console.log(e);
