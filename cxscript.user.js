@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      2.9.9
+// @version      3.0.0
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -1631,7 +1631,7 @@
     if ($l.includes('/mycourse/stu?') || $l.includes('mycourse/studentcourse?')) {
         //判断是否为旧版页面最稳妥的办法就是url里面有没有包含/mooc2-ans
         let newVersion = true
-        if(!$l.includes('/mooc2-ans')){
+        if (!$l.includes('/mooc2-ans')) {
             newVersion = false
         }
         let nowTime = Math.round(new Date() / 1000)
@@ -2505,13 +2505,13 @@
                 $layer('<p style="text-indent: 2em;">如果您的课程章节学完一节才能解锁下一节，不能跳过，那么这门课就是闯关模式，必须点击闯关模式按钮才能进行刷课</p>')
             };
             (['doVideo', 'doDocument', 'doWork', 'autoSubmit', 'doAI', 'doLive']).forEach((item, index, array) => {
-                if(GM_getValue(item,666)===666){
-                    GM_setValue(item,1)
+                if (GM_getValue(item, 666) === 666) {
+                    GM_setValue(item, 1)
                 }
             });
             (['doRenwu', 'doNoMission']).forEach((item, index, array) => {
-                if(GM_getValue(item,666)===666){
-                    GM_setValue(item,0)
+                if (GM_getValue(item, 666) === 666) {
+                    GM_setValue(item, 0)
                 }
             });
             doVideoButton.setAttribute('class', ['btn btn-light', 'btn btn-primary'][GM_getValue('doVideo', 1) + 0]);
@@ -2826,6 +2826,9 @@
                             mArgJson = JSON.parse(mArg),
                             reportUrl = mArgJson.defaults.reportUrl;
                         $fid = $fid || mArgJson.defaults['fid'] || '666'
+                        if (!$uid || !/^[1-9]\d*$/.test(String($uid))) {
+                            $uid = mArgJson.defaults['userid']
+                        }
                         for (let i = 0, l = mArgJson.attachments.length; i < l; i++) {
                             try {
                                 while (1) {
@@ -3863,7 +3866,7 @@
                                         } while (stop == false)
                                         break
                                     default:
-                                        logs.addLog('暂不支持的任务类型：' + (jobData?.type||jobData?.property?.module));
+                                        logs.addLog('暂不支持的任务类型：' + (jobData?.type || jobData?.property?.module));
                                 }
                             } catch (e) {
                                 console.log(e);
@@ -3899,18 +3902,18 @@
     }
     // 整卷预览页面,在此页面作答
     else if ($l.includes('ans/mooc2/exam/preview')) {
-        try{
+        try {
             const removeMask = setInterval(function () {
-            const masks = [...document.querySelectorAll('.mask_div')]
-            if (masks.length < 1) {
-                clearInterval(removeMask)
-                return
-            }
-            masks.forEach(e => {
-                e.remove()
-            })
-        }, 1000)
-        }catch(e){
+                const masks = [...document.querySelectorAll('.mask_div')]
+                if (masks.length < 1) {
+                    clearInterval(removeMask)
+                    return
+                }
+                masks.forEach(e => {
+                    e.remove()
+                })
+            }, 1000)
+        } catch (e) {
             console.log(e);
         }
         let host = hostList[0]
