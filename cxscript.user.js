@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      3.0.1
+// @version      3.0.2
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -578,63 +578,38 @@
 
         /* 
         ✔ 设置 Token 验证与保存逻辑
-        validator(token) → true/false
-        onSave(token) → 用户点击保存且验证通过后执行
         */
-        setTokenHandler(validator = (token) => {
-            const reg = /^[0-9a-z]{32}$/ig
-            return reg.test(token)
-        }, onSave = function (token) {
-            GM_setValue('shenchanranToken', token)
-            ctk(token)
-            clearInterval(this.tokenR)
-            this.tokenR = setInterval(() => {
-                this.setRestCount($w.left)
-            }, 500)
-        }) {
-
-            this._validator = validator;
-            this._onSave = onSave;
-
-            // 输入框监听：实时验证
-            this.tokenInput.addEventListener("input", () => {
-                const value = this.tokenInput.value;
-
-                const ok = this._validator(value);
-                this._tokenIsValid = ok;    // 保存验证状态
-
-                // 你可以在这里扩展输入实时提示
-            });
-
-            // 保存按钮点击逻辑（覆盖原有 onclick）
+        setTokenHandler() {
+            // 保存按钮点击逻辑
             this.saveBtn.onclick = () => {
-
-                const value = this.tokenInput.value;
-
-                if (this._tokenIsValid) {
-                    // 通过验证 —— 正常保存
+                let value = this.tokenInput.value;
+                value = value.replace(/\s/g, '');
+                const reg = /^[0-9a-z]{32}$/ig
+                if (reg.test(value)) {
+                    if (this._lastValidToken === value) {
+                        this.setBaseInfo("Token 未更改，无需保存。");
+                        return;
+                    }
                     this._lastValidToken = value;
-
-                    // 调用外部保存回调
-                    this._onSave(value);
-
+                    GM_setValue('shenchanranToken', value)
+                    ctk(value)
+                    clearInterval(this.tokenR)
+                    this.tokenR = setInterval(() => {
+                        this.setRestCount($w.left)
+                    }, 500)
                     // 写入日志
                     this.addLog("Token 保存成功。");
-
                 } else {
-
                     // 验证失败 —— 恢复旧 token
                     if (this._lastValidToken !== undefined) {
                         this.tokenInput.value = this._lastValidToken;
                     }
-
                     // 显示红色错误提示
                     this.setBaseInfo(`
                 <span style="color:red;font-weight:bold;">
                     token格式不符，已为您还原上一个token
                 </span>
             `);
-
                     // 写入日志
                     this.addLog("<span style='color:red'>Token 保存失败（格式不符）</span>");
                 }
