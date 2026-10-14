@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      3.0.2
+// @version      3.0.3
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -305,7 +305,7 @@
                 let newWindow = null;
                 try {
                     newWindow = window.open(url);
-                } catch (e) {}
+                } catch (e) { }
                 if (!newWindow) {
                     GM_openInTab(url, {
                         active: true,
@@ -564,7 +564,7 @@
         setRestCount(n) {
             this.restCount.textContent = "剩余次数：" + n;
             let color = 'blue';
-            if(n<100){
+            if (n < 100) {
                 color = 'red';
             }
             this.restCount.style.color = color
@@ -4348,7 +4348,8 @@
         ctk(token)
         let classId = $s['clazzid'] || $s['classid'] || $s['classId'] || $s['classId'],
             courseId = $s['courseid'] || $s['courseId']
-        let examId = courseId + '' + classId
+        let cpi = $s['cpi'] || '0'
+        let examId = courseId + cpi + classId
         GM_setValue('examData' + examId, false)
         const popup = new PopupTool();
         popup.setToken(token)
@@ -4398,12 +4399,13 @@
         }
         let classId = $s['clazzid'] || $s['classid'] || $s['classId'] || $s['classId'],
             courseId = $s['courseid'] || $s['courseId']
-        let examId = courseId + '' + classId
+        let cpi = $s['cpi'] || '0'
+        let examId = courseId + cpi + classId
         let data = GM_getValue('examData' + examId, false)
         let nowTime = Math.round(new Date() / 1000)
         let token = getTkToken()
         let host
-        if (!data) {
+        if (!data || !data.expire || nowTime >= data.expire) {
             data = {
                 lasUpdateLogs: 0,
                 lastCheckLefts: 0,
@@ -4412,7 +4414,8 @@
                 right: 0,
                 all: 0,
                 host: false,
-                done: false
+                done: false,
+                expire: nowTime + 43200
             }
             collect()
         } else {
