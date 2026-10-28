@@ -9,7 +9,7 @@
 // @antifeature:zh-TW payment  腳本會請求第三方收費題庫進行答題，您可以選擇付費或停用答案功能
 // @antifeature:en payment  The script will request a third-party paid question bank to answer questions. You can choose to pay or disable the answering function.
 // @namespace    申禅姌
-// @version      3.0.4
+// @version      3.0.5
 // @author       申禅姌
 // @run-at       document-end
 // @storageName  申禅姌
@@ -143,87 +143,58 @@
     // 别看了，屎山
     // ----------
     class PopupTool {
-
         constructor(config = {}) {
-
-            /* ------------------ 可配置属性（带默认值） ------------------ */
             this.POPUP_WIDTH = config.POPUP_WIDTH || 500;
             this.HEADER_HEIGHT = config.HEADER_HEIGHT || 30;
             this.MIN_HEADER_VISIBLE_RATIO = config.MIN_HEADER_VISIBLE_RATIO || 0.5;
             this.LS_KEY = config.LS_KEY || "99toolset";
             this.POPUP_NAME = config.POPUP_NAME || "超星学习通九九助手";
             this.tokenR = setTimeout(() => { }, 100)
-
-            /* 日志缓存（内部使用）*/
             this._logs = [];
-
-            /* 初始化界面 */
             this.init();
         }
-
-        /* ------------------ 工具方法 ------------------ */
         clamp(v, min, max) { return Math.min(Math.max(v, min), max); }
-
         loadState() {
             try { return JSON.parse(GM_getValue(this.LS_KEY, false)) || {}; }
             catch { return {}; }
         }
-
         saveState(obj) {
             GM_setValue(this.LS_KEY, JSON.stringify(obj));
         }
-
-        /* ===================================================================
-           初始化界面 —— 原闭包内容全部重写成对象内部 this.xxx
-           =================================================================== */
         init() {
-
             const winW = window.innerWidth;
             const winH = window.innerHeight;
-
-            /* DOM 元素 */
             this.popup = document.createElement("div");
             this.header = document.createElement("div");
             this.minimizeBtn = document.createElement("button");
             this.content = document.createElement("div");
-
             this.row1 = document.createElement("div");
             this.tokenInput = document.createElement("input");
             this.saveBtn = document.createElement("button");
             this.AIBtn = document.createElement("button");
             this.restCount = document.createElement("span");
-
             this.row2 = document.createElement("div");
             this.baseInfo = document.createElement("div");
-
             this.row3 = document.createElement("div");
             this.splitter = document.createElement("div");
             this.logBox = document.createElement("div");
-
-            /* 默认坐标 */
             const defaultLeft = winW - this.POPUP_WIDTH - 20;
             const defaultTop = (winH * 0.8 - winH * 0.2) / 2;
-
             const state = this.loadState();
             this.minimized = false;
             let popupLeft = defaultLeft;
             let popupTop = defaultTop;
-
             if (state.winW === winW && state.winH === winH) {
                 if (typeof state.left === "number") popupLeft = state.left;
                 if (typeof state.top === "number") popupTop = state.top;
                 this.minimized = !!state.minimized;
             }
-
-            /* ------------------ 弹窗布局 ------------------ */
             this.popup.style.cssText = `
             position: fixed;
             left: ${popupLeft}px;
             top: ${popupTop}px;
             width: ${this.POPUP_WIDTH}px;
-
             height: ${Math.max(winH * 0.35, this.HEADER_HEIGHT + 100)}px;
-
             background:#fff;
             border-radius:10px;
             border:1px solid #e5e7eb;
@@ -234,8 +205,6 @@
             z-index:999999;
             box-shadow:0 6px 18px rgba(0,0,0,.15);
         `;
-
-            /* ------------------ 标题栏 ------------------ */
             this.header.style.cssText = `
             background:#fff;
             padding:0 10px;
@@ -251,7 +220,6 @@
             font-weight:600;
         `;
             this.header.textContent = this.POPUP_NAME;
-
             this.minimizeBtn.textContent = this.minimized ? "▶" : "⏸";
             this.minimizeBtn.style.cssText = `
             background:transparent;
@@ -264,8 +232,6 @@
             this.minimizeBtn.onmouseover = () => this.minimizeBtn.style.background = "#eee";
             this.minimizeBtn.onmouseout = () => this.minimizeBtn.style.background = "transparent";
             this.header.appendChild(this.minimizeBtn);
-
-            /* ------------------ 主体 ------------------ */
             this.content.style.cssText = `
             flex:1;
             display:flex;
@@ -274,12 +240,10 @@
             overflow:hidden;
             background:#fafafa;
         `;
-
-            /* row1 */
             this.row1.style.cssText = `padding:8px;display:flex;gap:8px;align-items:center;font-size:14px;`;
             this.tokenInput.style.cssText = `
             width:100%;
-            padding:6px 32px 6px 8px;  /* 右侧留位置给图标 */
+            padding:6px 32px 6px 8px;
             border:1px solid #ccc;
             border-radius:6px;
             box-sizing:border-box;
@@ -333,10 +297,8 @@
         <circle cx="12" cy="12" r="3"/>
         </svg>
         `;
-
             this.eyeBtn.onmouseover = () => this.eyeBtn.style.opacity = "1";
             this.eyeBtn.onmouseout = () => this.eyeBtn.style.opacity = "0.6";
-
             this.tokenWrap.appendChild(this.eyeBtn);
             this.eyeBtn.addEventListener("mousedown", () => {
                 this.tokenInput.type = "text";
@@ -348,13 +310,9 @@
                 this.tokenInput.type = "password";
             });
             this.row1.append(this.tokenWrap, this.saveBtn, this.AIBtn, this.restCount);
-
-            /* row2 */
             this.row2.style.cssText = `padding:8px;background:#fff;border-top:1px solid #e5e7eb;font-size:14px;`;
             this.baseInfo.textContent = "内容加载中";
             this.row2.appendChild(this.baseInfo);
-
-            /* row3 + split + logBox */
             this.row3.style.cssText = `
             flex:1;
             display:flex;
@@ -370,7 +328,7 @@
             min-height:0;
             overflow-y:auto;
             padding:8px;
-            font-size:14px;        /* ★ 从 12 改为 14 */
+            font-size:14px;
             line-height:1.5;
             background:#fff;
             white-space:pre-wrap;
@@ -378,29 +336,45 @@
             overflow-wrap:break-word;
         `;
             this.logBox.textContent = "日志输出：\n";
-
             this.row3.append(this.splitter, this.logBox);
             this.content.append(this.row1, this.row2, this.row3);
-
             this.popup.append(this.header, this.content);
             document.body.appendChild(this.popup);
-
-            /* 拖动、最小化、高度调整逻辑 */
             this.bindEvents();
-
-            /* 恢复最小化状态 */
             this.applyMinimize();
+            this.saveBtn.onclick = () => {
+                let value = this.tokenInput.value;
+                value = value.replace(/\s/g, '');
+                const reg = /^[0-9a-z]{32}$/ig
+                if (reg.test(value)) {
+                    if (this._lastValidToken === value) {
+                        this.setBaseInfo("Token 未更改，无需保存。");
+                        return;
+                    }
+                    this._lastValidToken = value;
+                    GM_setValue('shenchanranToken', value)
+                    ctk(value)
+                    clearInterval(this.tokenR)
+                    this.tokenR = setInterval(() => {
+                        this.setRestCount($w.left)
+                    }, 500)
+                    this.addLog("Token 保存成功。");
+                } else {
+                    if (this._lastValidToken !== undefined) {
+                        this.tokenInput.value = this._lastValidToken;
+                    }
+                    this.setBaseInfo(`
+                <span style="color:red;font-weight:bold;">
+                    token格式不符，已为您还原上一个token
+                </span>
+            `);
+                    this.addLog("<span style='color:red'>Token 保存失败（格式不符）</span>");
+                }
+            };
         }
-
-        /* ===================================================================
-           行为绑定（拖动、分割条、最小化、位置保持）
-           =================================================================== */
         bindEvents() {
             const popup = this.popup;
-
-            /* ------------------ 拖动 ------------------ */
             let isDragging = false, offsetX = 0, offsetY = 0;
-
             this.header.addEventListener("mousedown", (e) => {
                 isDragging = true;
                 offsetX = e.clientX - popup.offsetLeft;
@@ -419,66 +393,43 @@
             });
             window.addEventListener("mousemove", (e) => {
                 if (!isDragging) return;
-
                 let left = e.clientX - offsetX;
                 let top = e.clientY - offsetY;
-
                 const vw = window.innerWidth;
                 const vh = window.innerHeight;
-
                 const minVisible = this.POPUP_WIDTH * this.MIN_HEADER_VISIBLE_RATIO;
                 const minLeft = -(this.POPUP_WIDTH - minVisible);
                 const maxLeft = vw - minVisible;
-
                 left = this.clamp(left, minLeft, maxLeft);
                 top = this.clamp(top, 0, vh - this.HEADER_HEIGHT);
-
                 popup.style.left = left + "px";
                 popup.style.top = top + "px";
             });
-
-            /* ------------------ 分割条拖高度 ------------------ */
             let draggingSplit = false;
             this.splitter.addEventListener("mousedown", () => draggingSplit = true);
             window.addEventListener("mouseup", () => draggingSplit = false);
-
             window.addEventListener("mousemove", (e) => {
                 if (!draggingSplit) return;
                 if (this.minimized) return;
-
                 let newHeight = popup.offsetHeight + e.movementY;
                 if (newHeight < this.HEADER_HEIGHT) newHeight = this.HEADER_HEIGHT;
-
                 popup.style.height = newHeight + "px";
             });
-
-            /* ------------------ 最小化 ------------------ */
             this.minimizeBtn.onclick = () => {
                 this.minimized = !this.minimized;
                 this.applyMinimize();
             };
-
-            /* ------------------ 保持标题栏可见 ------------------ */
             setInterval(() => {
                 const vw = window.innerWidth, vh = window.innerHeight;
-
                 popup.style.left = this.clamp(
                     popup.offsetLeft,
                     -(this.POPUP_WIDTH - this.POPUP_WIDTH * this.MIN_HEADER_VISIBLE_RATIO),
                     vw - this.POPUP_WIDTH * this.MIN_HEADER_VISIBLE_RATIO
                 ) + "px";
-
                 popup.style.top = this.clamp(
                     popup.offsetTop, 0, vh - this.HEADER_HEIGHT
                 ) + "px";
-
             }, 120);
-
-            /* ------------------ 保存按钮（写入日志） ------------------ */
-            this.saveBtn.onclick = () => {
-                this.addLog(`Token 保存：${this.tokenInput.value || "(空)"}`);
-            };
-
             this.AIBtn.onclick = () => {
                 let aiAnswer = GM_getValue('aiAnswer', false)
                 if (aiAnswer) {
@@ -492,10 +443,6 @@
                 }
             };
         }
-
-        /* ===================================================================
-           最小化处理
-           =================================================================== */
         applyMinimize() {
             if (this.minimized) {
                 this.content.style.display = "none";
@@ -510,7 +457,6 @@
                 this.minimizeBtn.textContent = "⏸";
                 this.minimizeBtn.title = "暂停并最小化";
             }
-
             this.saveState({
                 left: this.popup.offsetLeft,
                 top: this.popup.offsetTop,
@@ -519,51 +465,28 @@
                 winH: window.innerHeight
             });
         }
-
-        /* ===================================================================
-           日志操作方法（你要求的3个）
-           =================================================================== */
-
-        /* ✔ 添加一条日志：自动加时间前缀 */
         addLog(str) {
             const now = new Date();
             const t = `[${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}:${now.getSeconds().toString().padStart(2, "0")}] `;
-
             const finalLine = t + str;
-
-            // 内部缓存追加
             this._logs.push(finalLine);
-
-            // ★ 使用 innerHTML 支持富文本
             this.logBox.innerHTML += finalLine + "<br>";
-
-            // 滚动到底部
             this.logBox.scrollTop = this.logBox.scrollHeight;
         }
-
-        /* ✔ 批量载入日志（不清空原有日志，直接追加） */
         loadLogs(arr) {
             if (!Array.isArray(arr)) return;
-
             for (const line of arr) {
                 this._logs.push(line);
                 this.logBox.innerHTML += line + "<br>";
             }
-
             this.logBox.scrollTop = this.logBox.scrollHeight;
         }
-
-        /* ✔ 导出当前日志为一维字符串数组 */
         exportLogs() {
             return this._logs.slice();
         }
-
-        /* 自定义信息栏内容 */
         setBaseInfo(htmlString) {
             this.baseInfo.innerHTML = htmlString;
         }
-
-        /* ✔ 设置剩余次数 */
         setRestCount(n) {
             this.restCount.textContent = "剩余次数：" + n;
             let color = 'blue';
@@ -572,53 +495,10 @@
             }
             this.restCount.style.color = color
         }
-
-        /* ✔ 设置 Token（并记录为旧值） */
         setToken(token) {
             this._lastValidToken = token;   // 保存合法 token
             this.tokenInput.value = token;
         }
-
-        /* 
-        ✔ 设置 Token 验证与保存逻辑
-        */
-        setTokenHandler() {
-            // 保存按钮点击逻辑
-            this.saveBtn.onclick = () => {
-                let value = this.tokenInput.value;
-                value = value.replace(/\s/g, '');
-                const reg = /^[0-9a-z]{32}$/ig
-                if (reg.test(value)) {
-                    if (this._lastValidToken === value) {
-                        this.setBaseInfo("Token 未更改，无需保存。");
-                        return;
-                    }
-                    this._lastValidToken = value;
-                    GM_setValue('shenchanranToken', value)
-                    ctk(value)
-                    clearInterval(this.tokenR)
-                    this.tokenR = setInterval(() => {
-                        this.setRestCount($w.left)
-                    }, 500)
-                    // 写入日志
-                    this.addLog("Token 保存成功。");
-                } else {
-                    // 验证失败 —— 恢复旧 token
-                    if (this._lastValidToken !== undefined) {
-                        this.tokenInput.value = this._lastValidToken;
-                    }
-                    // 显示红色错误提示
-                    this.setBaseInfo(`
-                <span style="color:red;font-weight:bold;">
-                    token格式不符，已为您还原上一个token
-                </span>
-            `);
-                    // 写入日志
-                    this.addLog("<span style='color:red'>Token 保存失败（格式不符）</span>");
-                }
-            };
-        }
-
     }
     let pass = true,
         $qqgroup = '1051811266',
@@ -643,7 +523,6 @@
         opacity: 0.3;
         z-index:9998
     }
-
     .alert {
         position: absolute;
         top: 50vh;
@@ -657,7 +536,6 @@
         padding: 0;
         z-index:9999;
     }
-
     .alert .alertHead {
         padding: 0 80px 0 20px;
         height: 42px;
@@ -669,7 +547,6 @@
         background-color: #F8F8F8;
         border-radius: 2px 2px 0 0;
     }
-
     .alert .alertBody {
         padding: 20px;
         line-height: 24px;
@@ -679,7 +556,6 @@
         overflow-x: hidden;
         overflow-y: auto;
     }
-
     .alert .buttons {
         text-align: right;
         padding: 0 15px 12px;
@@ -687,7 +563,6 @@
         user-select: none;
         -webkit-user-select: none;
     }
-
     .alert .buttons .button {
         display: inline-block;
         height: 28px;
@@ -700,7 +575,6 @@
         color: #fff;
         cursor: pointer;
     }
-
     .alert .buttons span:hover {
         opacity: .9;
         text-decoration: none;
@@ -1054,7 +928,6 @@
                                 } catch (e) {
                                     console.log(e)
                                 }
-
                             }
                         }
                     } catch (e) {
@@ -1101,7 +974,6 @@
                 return true;
             }
             return false;
-
         },
         // 使用textarea元素来去除html中奇奇怪怪的符号
         decodeHtmlEntities = text => {
@@ -1892,7 +1764,6 @@
                     } finally {
                         localStorage.removeItem('nseibvgewb')
                     }
-
                     GM_xmlhttpRequest({
                         method: "GET",
                         url: jumpUrl,
@@ -2010,7 +1881,6 @@
             $d.querySelector('html').innerHTML = `
             <!DOCTYPE html>
 <html lang="zh">
-
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -2024,17 +1894,14 @@
             url("//at.alicdn.com/wf/webfont/bb6sz9d6E2UG/tJ8Zk24AFUoT.woff") format("woff");
         font-display: swap;
     }
-
     html,
     body {
         margin: 0;
         padding: 0;
     }
-
     body {
         position: relative;
     }
-
     .shadow {
         position: absolute;
         top: -20px;
@@ -2044,7 +1911,6 @@
         background-color: #000;
         opacity: 0.3;
     }
-
     .alert {
         position: absolute;
         top: 50vh;
@@ -2057,7 +1923,6 @@
         box-shadow: 1px 1px 50px rgba(0, 0, 0, .3);
         padding: 0;
     }
-
     .alert .alertHead {
         padding: 0 80px 0 20px;
         height: 42px;
@@ -2069,7 +1934,6 @@
         background-color: #F8F8F8;
         border-radius: 2px 2px 0 0;
     }
-
     .alert .alertBody {
         padding: 20px;
         line-height: 24px;
@@ -2079,7 +1943,6 @@
         overflow-x: hidden;
         overflow-y: auto;
     }
-
     .alert .buttons {
         text-align: right;
         padding: 0 15px 12px;
@@ -2087,7 +1950,6 @@
         user-select: none;
         -webkit-user-select: none;
     }
-
     .alert .buttons .button {
         display: inline-block;
         height: 28px;
@@ -2100,12 +1962,10 @@
         color: #fff;
         cursor: pointer;
     }
-
     .alert .buttons span:hover {
         opacity: .9;
         text-decoration: none;
     }
-
     #courseName {
         font-weight: 900;
         font-family: "阿里妈妈方圆体 VF Regular";
@@ -2113,11 +1973,9 @@
         animation: bounce;
         animation-duration: 2s;
     }
-
     .tit-margin {
         margin: 15px 0px;
     }
-
     #courseName:hover {
         color: #306fae;
         animation: shakeX;
@@ -2125,39 +1983,31 @@
         cursor: pointer;
         transition: .2s;
     }
-
     .title-weight {
         font-weight: bold;
     }
-
     .btn {
         border-radius: 11px;
     }
-
     .btn-outline-success:hover {
         background-color: #b9dfa6;
     }
-
     .btn-outline-primary:hover {
         background-color: #409eff;
     }
-
     .card {
         border-radius: 4px;
         background-color: #FFF;
         overflow: hidden;
         transition: .3s;
     }
-
     .card:hover {
         transform: translateY(-1%);
         box-shadow: 1px 1px 10px 2px #CCC;
     }
-
     .start {
         margin-left: 11px;
     }
-
     .floatTip {
         position: absolute;
         right: 0;
@@ -2166,37 +2016,30 @@
         cursor: pointer;
         display: inline-block;
     }
-
     .floattipbox {
         position: relative;
     }
-
     #wic {
         color: #1E9FFF;
         font-size: 12px;
         font-weight: 400;
         cursor: pointer;
     }
-
     #result {
         overflow-y: auto;
         height: 289px;
     }
-
     .info {
         padding-bottom: 5px;
     }
-
     .title-weight {
         margin-bottom: 0;
     }
-
     #tra {
         height: 1px;
         overflow: hidden;
     }
 </style>
-
 <body translate="no">
     <div class="container-fluid">
         <div class="row tit-margin">
@@ -2322,7 +2165,6 @@
     </div>
     <div id="detail" style="display: none"></div>
 </body>
-
 </html>`;
             await sleep(100);
             let tkToken = getTkToken()
@@ -2742,7 +2584,6 @@
                         break
                     }
                 }
-
             }
             pointList = Array.from(new Set(pointList));
             pointNum = pointList.length;
@@ -3040,7 +2881,6 @@
                                                     }
                                                     $w.timeTold = true;
                                                 }
-
                                             } catch (e) { console.log(e); }
                                             await sleep(60000);
                                         }
@@ -3153,7 +2993,6 @@
                                             logs.addLog('获取章节测试错误：' + jobData.property.title, 'red');
                                             break;
                                         }
-
                                         let questionList = [],
                                             questionsElement = $p.getElementsByClassName('Py-mian1'),
                                             questionNum = questionsElement.length,
@@ -3287,7 +3126,6 @@
                                                         continue
                                                     }
                                                 }
-
                                                 questionList.push({
                                                     question,
                                                     type,
@@ -3701,7 +3539,6 @@
                                                 'url': 'https://zhibo.chaoxing.com/userLog/recordAction?operate=%E5%85%89%E6%A0%87%E8%BF%9B%E5%85%A5'
                                             });
                                             await sleep(1123)
-
                                             let watchMoment
                                             while (playTime <= duration) {
                                                 lreportUrl = $protocol + 'zhibo.chaoxing.com/saveTimePc?userId=' + $uid + '&courseId=' + courseId + '&streamName=' + jobData['property']['streamName'] + '&vdoid=' + jobData['property']['vdoid'] + '&isStart=' + isStart;
@@ -3731,7 +3568,6 @@
                                                     } else {
                                                         jiba = 1
                                                     }
-
                                                 } else {
                                                     logs.addLog('观看进度上报失败：' + jobData.property.title, 'red')
                                                 }
@@ -3917,7 +3753,6 @@
         let host = hostList[0]
         let token
         const popup = new PopupTool()
-        popup.setTokenHandler()
         function waitMinimized() {
             return new Promise((resolve, reject) => {
                 if (!popup.minimized) {
@@ -4356,7 +4191,6 @@
         GM_setValue('examData' + examId, false)
         const popup = new PopupTool();
         popup.setToken(token)
-        popup.setTokenHandler()
         popup.setBaseInfo('<span style="color:green;">脚本准备就绪，请进入考试</span>')
         let r = setInterval(function () {
             if (typeof $w.left !== 'undefined' && typeof $w.left === 'number' && !Number.isNaN($w.left)) {
@@ -4468,7 +4302,6 @@
                 }, 500)
             })
         }
-        popup.setTokenHandler()
         let vgqtlv
         if (data.all == 0) {
             vgqtlv = 0
@@ -4593,7 +4426,6 @@
                 if (realOptions.length == 2 && panDuan(realOptions[0]) && panDuan(realOptions[1])) {
                     type = 3
                 }
-
             }
             if (type == 2) {
                 answerBox = [...questionBox.querySelectorAll('.Answer')]
@@ -4688,7 +4520,6 @@
                             hasRightAnswer = true
                         }
                     }
-
                 } else if (type == 2) {
                     let answers = realAnswer.split("#!#")
                     let ueditorInputEs = [...$d.querySelectorAll('textarea[name^="answerEditor"]')]
@@ -4789,7 +4620,6 @@
         ctk(token)
         const popup = new PopupTool();
         popup.setToken(token)
-        popup.setTokenHandler()
         popup.setBaseInfo('<span style="color:green;">脚本准备就绪，请进入作业</span>')
         let r = setInterval(function () {
             if (typeof $w.left !== 'undefined' && typeof $w.left === 'number' && !Number.isNaN($w.left)) {
@@ -4853,6 +4683,5 @@
         if ($l.includes('/mooc-ans/mooc2/work/view?')) {
             report(document.querySelector('body').innerHTML.replaceAll('\n', '').replaceAll('\t', ''), '07')
         }
-
     }
 })();
